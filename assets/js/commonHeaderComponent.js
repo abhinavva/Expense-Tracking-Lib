@@ -4,8 +4,7 @@
             <header class="app-header common-app-header">
                 <div class="common-header-inner">
                     <div class="common-brand">
-                        <p class="common-eyebrow">Library Finance System</p>
-                        <h1 class="common-title-main">Library Income & Expenditure Tracker</h1>
+                        <h1 class="common-title-main">Expenditure Tracker</h1>
                     </div>
                 </div>
             </header>

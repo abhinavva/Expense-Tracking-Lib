@@ -12,11 +12,37 @@
     --card-shadow: 0 6px 25px rgba(0, 0, 0, 0.14);
     --card-shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.18);
     --radius: 14px;
-    --common-header-height: 98px;
+    --common-header-height: 80px;
 }
 
 * {
     box-sizing: border-box;
+}
+
+/* Theme-matched scrollbar styling */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #2f45a8 #dbe7fb;
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: #dbe7fb;
+    border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #3f58c2, #253f9f);
+    border-radius: 999px;
+    border: 2px solid #dbe7fb;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #4a66cf, #2f4db3);
 }
 
 body {
@@ -186,17 +212,20 @@ body {
 }
 
 .common-app-header {
-    width: min(1200px, 100%);
-    margin: 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    display: flex;
+    justify-content: flex-start;
 }
 
 .common-header-inner {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 10px;
-    text-align: center;
-    padding: 0 14px;
+    text-align: left;
+    padding: 0;
 }
 
 .common-brand {
@@ -214,11 +243,12 @@ body {
 
 .common-title-main {
     margin: 0;
-    color: #ffffff;
+    color: rgba(225, 236, 255, 0.86);
     font-size: clamp(1.1rem, 2.6vw, 1.65rem);
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.1;
     text-shadow: 0 1px 1px rgba(7, 18, 48, 0.35);
+    text-transform: uppercase;
 }
 
 .common-subtitle {
@@ -236,14 +266,14 @@ body {
     right: 0;
     height: var(--common-header-height);
     z-index: 1000;
-    padding: 8px 16px;
-    background: linear-gradient(115deg, #0f2a73 0%, #1f3f9a 52%, #3258be 100%);
+    padding: 8px 8px;
+    background: linear-gradient(115deg, #0f2a73 0%, #0f2a73 52%, #0f2a73 100%);
     border-bottom: 1px solid rgba(175, 197, 255, 0.42);
     box-shadow: 0 8px 22px rgba(12, 30, 86, 0.3);
     backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     overflow: hidden;
 }
 
@@ -269,6 +299,9 @@ body {
 
 [data-common-header] .common-app-header {
     margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 .role-pill {
