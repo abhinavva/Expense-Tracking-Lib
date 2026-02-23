@@ -12,7 +12,7 @@
     --card-shadow: 0 6px 25px rgba(0, 0, 0, 0.14);
     --card-shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.18);
     --radius: 14px;
-    --common-header-height: 110px;
+    --common-header-height: 86px;
 }
 
 * {
@@ -28,10 +28,11 @@ body {
     background-attachment: fixed;
     background-size: 100% 100%;
     min-height: 100vh;
+    overflow-y: auto;
 }
 
 .app-page {
-    padding: calc(var(--common-header-height) + 12px) 16px 32px 252px;
+    padding: calc(var(--common-header-height) + 18px) 16px 32px 252px;
     transition: padding-left 0.25s ease;
 }
 
@@ -167,7 +168,7 @@ body {
 
 .auth-shell {
     position: fixed;
-    inset: var(--common-header-height) 0 0 0;
+    inset: calc(var(--common-header-height) + 6px) 0 0 0;
     padding: 16px;
     margin: 0;
     display: grid;
@@ -188,15 +189,33 @@ body {
     top: 0;
     left: 0;
     right: 0;
+    height: var(--common-header-height);
     z-index: 1000;
-    padding: 10px 16px 8px;
+    padding: 6px 16px;
     background: linear-gradient(to bottom, var(--bg-top), rgba(224, 247, 250, 0.95));
     border-bottom: 1px solid rgba(198, 224, 232, 0.9);
     backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 [data-common-header] .common-app-header {
     margin-bottom: 0;
+}
+
+[data-common-header] .app-title-local {
+    font-size: clamp(0.95rem, 2.2vw, 1.25rem);
+}
+
+[data-common-header] .app-title {
+    margin-top: 2px;
+    font-size: clamp(1.05rem, 2.8vw, 1.9rem);
+}
+
+[data-common-header] .app-subtitle {
+    margin-top: 4px;
+    font-size: 0.78rem;
 }
 
 .role-pill {
@@ -631,7 +650,7 @@ tr:nth-child(even) td {
 
 @media (max-width: 820px) {
     .app-page {
-        padding: calc(var(--common-header-height) + 8px) 14px 14px;
+        padding: calc(var(--common-header-height) + 10px) 14px 14px;
     }
 
     .app-page.sidebar-collapsed {
@@ -667,7 +686,7 @@ tr:nth-child(even) td {
     }
 
     .auth-shell {
-        inset: var(--common-header-height) 0 0 0;
+        inset: calc(var(--common-header-height) + 6px) 0 0 0;
         padding: 12px;
     }
 
