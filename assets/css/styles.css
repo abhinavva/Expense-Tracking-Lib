@@ -650,18 +650,94 @@ tr:nth-child(even) td {
 
 @media (max-width: 820px) {
     .app-page {
-        padding: calc(var(--common-header-height) + 10px) 14px 14px;
+        padding: calc(var(--common-header-height) + 10px) 14px 98px;
     }
 
     .app-page.sidebar-collapsed {
         padding-left: 14px;
+        padding-bottom: 98px;
     }
 
     .sidebar {
-        position: static;
-        width: auto;
-        bottom: auto;
-        margin-bottom: 12px;
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: auto;
+        bottom: 0;
+        width: 100%;
+        margin: 0;
+        border-radius: 14px 14px 0 0;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+        padding: 8px 8px 10px;
+        z-index: 999;
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: 0 -6px 22px rgba(19, 32, 50, 0.14);
+        backdrop-filter: blur(4px);
+    }
+
+    .sidebar-toggle,
+    .sidebar-user {
+        display: none;
+    }
+
+    .sidebar-nav {
+        flex-direction: row;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .sidebar-item {
+        flex: 1 1 0;
+        min-height: 58px;
+        min-width: 0;
+        padding: 6px 4px;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        border-radius: 10px;
+    }
+
+    .sidebar-item-icon {
+        width: 20px;
+        height: 20px;
+        font-size: 0.68rem;
+    }
+
+    .sidebar-item-label {
+        font-size: 0.72rem;
+        line-height: 1.05;
+        text-align: center;
+        white-space: normal;
+    }
+
+    #viewBtn .sidebar-item-label {
+        font-size: 0;
+    }
+
+    #viewBtn .sidebar-item-label::before {
+        content: "View";
+        font-size: 0.72rem;
+    }
+
+    #analyticsBtn .sidebar-item-label {
+        font-size: 0;
+    }
+
+    #analyticsBtn .sidebar-item-label::before {
+        content: "Insights";
+        font-size: 0.72rem;
+    }
+
+    #openUserManagementBtn .sidebar-item-label {
+        font-size: 0;
+    }
+
+    #openUserManagementBtn .sidebar-item-label::before {
+        content: "Users";
+        font-size: 0.72rem;
     }
 
     .section-header {
