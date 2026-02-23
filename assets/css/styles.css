@@ -149,6 +149,13 @@ body {
     font-weight: 700;
 }
 
+.sidebar-item-icon img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    display: block;
+}
+
 .sidebar-user {
     border-top: 1px solid #dbe6f7;
     padding-top: 10px;
@@ -210,6 +217,10 @@ body {
     place-items: center;
 }
 
+.auth-page.auth-page-no-header .auth-shell {
+    inset: 0;
+}
+
 .app-header {
     margin-bottom: 18px;
     text-align: center;
@@ -230,6 +241,14 @@ body {
     gap: 10px;
     text-align: left;
     padding: 0;
+}
+
+.common-brand-icon {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    display: block;
+    filter: brightness(0) invert(1);
 }
 
 .common-brand {
@@ -372,6 +391,16 @@ body {
     grid-column: 1 / -1;
 }
 
+.entry-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.entry-form-actions .btn {
+    min-width: 120px;
+}
+
 label {
     font-size: 0.92rem;
     font-weight: 600;
@@ -406,6 +435,21 @@ select:focus {
     font-weight: 600;
     cursor: pointer;
     transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.btn-with-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-with-icon img {
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+    display: block;
+    filter: brightness(0) invert(1);
 }
 
 .btn:hover {
@@ -598,6 +642,15 @@ tr:nth-child(even) td {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
+}
+
+.action-btn-icon {
+    width: 13px;
+    height: 13px;
+    object-fit: contain;
+    display: block;
+    filter: brightness(0) invert(1);
 }
 
 #entriesTable th:last-child,
@@ -644,11 +697,40 @@ tr:nth-child(even) td {
 }
 
 .entries-pagination {
-    margin-top: 12px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 10px;
+}
+
+.entries-table-footer {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.entries-page-size {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.86rem;
+    color: #455a64;
+    font-weight: 600;
+}
+
+.entries-page-size label {
+    color: #455a64;
+    font-size: 0.86rem;
+}
+
+.entries-page-size select {
+    min-height: 34px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 0.86rem;
 }
 
 .pagination-btn {
@@ -1158,6 +1240,15 @@ tr:nth-child(even) td {
         flex-wrap: wrap;
     }
 
+    .entries-table-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .entries-page-size {
+        justify-content: center;
+    }
+
     .analytics-charts {
         grid-template-columns: 1fr;
     }
@@ -1178,6 +1269,10 @@ tr:nth-child(even) td {
     .auth-shell {
         inset: calc(var(--common-header-height) + 6px) 0 0 0;
         padding: 12px;
+    }
+
+    .auth-page.auth-page-no-header .auth-shell {
+        inset: 0;
     }
 
     .card {

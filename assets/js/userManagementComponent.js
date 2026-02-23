@@ -27,7 +27,18 @@ class UserManagementComponent {
     createActionButton(label, className, onClick) {
         const button = document.createElement("button");
         button.type = "button";
-        button.textContent = label;
+        const iconPath = className === "action-btn-edit" ? "assets/icons/pencil.png" : "";
+        if (iconPath) {
+            const icon = document.createElement("img");
+            icon.src = iconPath;
+            icon.alt = "";
+            icon.className = "action-btn-icon";
+            icon.loading = "lazy";
+            button.appendChild(icon);
+        }
+        const labelSpan = document.createElement("span");
+        labelSpan.textContent = label;
+        button.appendChild(labelSpan);
         button.className = `action-btn ${className}`;
         button.addEventListener("click", onClick);
         return button;

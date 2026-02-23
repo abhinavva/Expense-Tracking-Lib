@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const entryForm = document.getElementById("entryForm");
     const entryCard = document.getElementById("entryCard");
     const addEntryBtn = document.getElementById("addEntryBtn");
+    const clearEntryBtn = document.getElementById("clearEntryBtn");
     const homeBtn = document.getElementById("homeBtn");
     const analyticsBtn = document.getElementById("analyticsBtn");
     const logoutBtn = document.getElementById("logoutBtn");
@@ -39,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const exportFrom = document.getElementById("exportFrom");
     const exportTo = document.getElementById("exportTo");
     const entriesPagination = document.getElementById("entriesPagination");
+    const entriesPerPageSelect = document.getElementById("entriesPerPageSelect");
     const etSearch = document.getElementById("etSearch");
     const etTypeFilter = document.getElementById("etTypeFilter");
     const etHeadFilter = document.getElementById("etHeadFilter");
@@ -55,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let loggedInUser = null;
     let entriesCache = null;
     let currentEntriesPage = 1;
-    const entriesPerPage = 10;
+    let entriesPerPage = Number(entriesPerPageSelect.value) || 15;
     const financeInsights = new window.FinanceInsightsComponent({
         panel: analyticsPanel,
         monthlyTabBtn: analyticsMonthlyTabBtn,
@@ -245,10 +247,32 @@ document.addEventListener("DOMContentLoaded", () => {
         newHeadContainer.classList.add("hidden");
     }
 
+    function clearEntryForm() {
+        entryForm.reset();
+        setTodayDate();
+        updateVoucherLabel();
+        toggleNewHeadInput();
+    }
+
     function createActionButton(label, className, onClick) {
         const button = document.createElement("button");
         button.type = "button";
-        button.textContent = label;
+        const iconPath = className === "action-btn-edit"
+            ? "assets/icons/pencil.png"
+            : className === "action-btn-delete"
+                ? "assets/icons/bin.png"
+                : "";
+        if (iconPath) {
+            const icon = document.createElement("img");
+            icon.src = iconPath;
+            icon.alt = "";
+            icon.className = "action-btn-icon";
+            icon.loading = "lazy";
+            button.appendChild(icon);
+        }
+        const labelSpan = document.createElement("span");
+        labelSpan.textContent = label;
+        button.appendChild(labelSpan);
         button.className = `action-btn ${className}`;
         button.addEventListener("click", onClick);
         return button;
@@ -719,6 +743,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     addEntryBtn.addEventListener("click", addEntry);
+    clearEntryBtn.addEventListener("click", clearEntryForm);
     homeBtn.addEventListener("click", (event) => {
         event.preventDefault();
         showHomeSection();
@@ -760,6 +785,11 @@ document.addEventListener("DOMContentLoaded", () => {
         loadEntriesFromDB();
     });
     etClearFilters.addEventListener("click", clearEntriesFilters);
+    entriesPerPageSelect.addEventListener("change", () => {
+        entriesPerPage = Number(entriesPerPageSelect.value) || 15;
+        currentEntriesPage = 1;
+        loadEntriesFromDB();
+    });
     financeInsights.init(async () => {
         if (!financeInsights.isVisible()) {
             return;

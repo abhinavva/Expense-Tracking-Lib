@@ -3,6 +3,7 @@
         hostElement.innerHTML = `
             <header class="app-header common-app-header">
                 <div class="common-header-inner">
+                    <img class="common-brand-icon" src="assets/icons/wallet.png" alt="Application icon" loading="lazy">
                     <div class="common-brand">
                         <h1 class="common-title-main">Expenditure Tracker</h1>
                     </div>

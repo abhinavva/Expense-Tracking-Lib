@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Library Income & Expenditure Tracker</title>
+    <link rel="icon" type="image/png" href="assets/icons/wallet.png">
     <link rel="stylesheet" href="assets/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,19 +21,19 @@
         </button>
         <nav class="sidebar-nav" aria-label="Primary navigation">
             <a id="homeBtn" class="sidebar-item" href="#">
-                <span class="sidebar-item-icon">H</span>
+                <span class="sidebar-item-icon"><img src="assets/icons/home.png" alt="" loading="lazy"></span>
                 <span class="sidebar-item-label">Home</span>
             </a>
             <a id="analyticsBtn" class="sidebar-item" href="#">
-                <span class="sidebar-item-icon">A</span>
+                <span class="sidebar-item-icon"><img src="assets/icons/financial-document.png" alt="" loading="lazy"></span>
                 <span class="sidebar-item-label">Finance Insights</span>
             </a>
             <a id="openUserManagementBtn" class="sidebar-item" href="#">
-                <span class="sidebar-item-icon">U</span>
+                <span class="sidebar-item-icon"><img src="assets/icons/user.png" alt="" loading="lazy"></span>
                 <span class="sidebar-item-label">User Management</span>
             </a>
             <a id="logoutBtn" class="sidebar-item" href="#">
-                <span class="sidebar-item-icon">L</span>
+                <span class="sidebar-item-icon"><img src="assets/icons/logout.png" alt="" loading="lazy"></span>
                 <span class="sidebar-item-label">Logout</span>
             </a>
         </nav>
@@ -107,7 +108,13 @@
                     <input type="number" id="amount" placeholder="e.g., 1000" step="0.01" required>
                 </div>
 
-                <button id="addEntryBtn" class="btn btn-primary form-field-wide" type="button">Add Entry</button>
+                <div class="form-field-wide entry-form-actions">
+                    <button id="clearEntryBtn" class="btn btn-secondary" type="button">Clear</button>
+                    <button id="addEntryBtn" class="btn btn-primary btn-with-icon" type="button">
+                        <img src="assets/icons/addition.png" alt="" loading="lazy">
+                        <span>Add Entry</span>
+                    </button>
+                </div>
             </form>
         </section>
 
@@ -176,7 +183,19 @@
                     </thead>
                     <tbody></tbody>
                 </table>
-                <div id="entriesPagination" class="entries-pagination"></div>
+                <div class="entries-table-footer">
+                    <div class="entries-page-size">
+                        <label for="entriesPerPageSelect">Show</label>
+                        <select id="entriesPerPageSelect">
+                            <option value="5">5</option>
+                            <option value="15" selected>15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span>items</span>
+                    </div>
+                    <div id="entriesPagination" class="entries-pagination"></div>
+                </div>
             </div>
 
             <div id="exportSection" class="export-section">
@@ -191,7 +210,10 @@
                         <input type="date" id="exportTo">
                     </div>
                     <div class="export-action">
-                        <button id="exportDateBtn" class="btn btn-success" type="button">Export</button>
+                        <button id="exportDateBtn" class="btn btn-success btn-with-icon" type="button">
+                            <img src="assets/icons/share.png" alt="" loading="lazy">
+                            <span>Export</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -261,7 +283,10 @@
         <section id="userManagementPanel" class="card hidden">
             <div class="section-header">
                 <h3 id="userManagementTitle">User Management</h3>
-                <button id="createUserBtn" class="btn btn-primary" type="button">Create User</button>
+                <button id="createUserBtn" class="btn btn-primary btn-with-icon" type="button">
+                    <img src="assets/icons/user.png" alt="" loading="lazy">
+                    <span>Create User</span>
+                </button>
             </div>
             <div class="um-stats-grid">
                 <div class="um-stat-card">
