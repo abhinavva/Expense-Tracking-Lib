@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const clearEntryBtn = document.getElementById("clearEntryBtn");
     const homeBtn = document.getElementById("homeBtn");
     const analyticsBtn = document.getElementById("analyticsBtn");
+    const backupBtn = document.getElementById("backupBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const dataPanel = document.getElementById("dataPanel");
     const analyticsPanel = document.getElementById("analyticsPanel");
@@ -25,7 +26,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const umActiveUsers = document.getElementById("umActiveUsers");
     const umStaffUsers = document.getElementById("umStaffUsers");
     const umAdminUsers = document.getElementById("umAdminUsers");
+    const usersPagination = document.getElementById("usersPagination");
+    const usersPerPageSelect = document.getElementById("usersPerPageSelect");
     const userManagementPanel = document.getElementById("userManagementPanel");
+    const backupPanel = document.getElementById("backupPanel");
+    const backupOnlyBtn = document.getElementById("backupOnlyBtn");
+    const backupAndDeleteBtn = document.getElementById("backupAndDeleteBtn");
+    const backupRootPath = document.getElementById("backupRootPath");
+    const saveBackupPathBtn = document.getElementById("saveBackupPathBtn");
+    const backupPathStatus = document.getElementById("backupPathStatus");
+    const backupSelectAll = document.getElementById("backupSelectAll");
+    const backupFromDate = document.getElementById("backupFromDate");
+    const backupToDate = document.getElementById("backupToDate");
+    const backupFileInput = document.getElementById("backupFileInput");
+    const importBackupBtn = document.getElementById("importBackupBtn");
+    const backupSelectedFile = document.getElementById("backupSelectedFile");
+    const backupStatusText = document.getElementById("backupStatusText");
     const appShell = document.querySelector(".app-shell");
     const appSidebar = document.getElementById("appSidebar");
     const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
@@ -36,9 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const accountHeadSelect = document.getElementById("accountHead");
     const newHeadContainer = document.getElementById("newHeadContainer");
     const newAccountHeadInput = document.getElementById("newAccountHead");
-    const exportDateBtn = document.getElementById("exportDateBtn");
-    const exportFrom = document.getElementById("exportFrom");
-    const exportTo = document.getElementById("exportTo");
     const entriesPagination = document.getElementById("entriesPagination");
     const entriesPerPageSelect = document.getElementById("entriesPerPageSelect");
     const etSearch = document.getElementById("etSearch");
@@ -79,7 +92,9 @@ document.addEventListener("DOMContentLoaded", () => {
         totalUsersEl: umTotalUsers,
         activeUsersEl: umActiveUsers,
         staffUsersEl: umStaffUsers,
-        adminUsersEl: umAdminUsers
+        adminUsersEl: umAdminUsers,
+        usersPagination,
+        usersPerPageSelect
     });
 
     function normalizeRole(role) {
@@ -94,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function setActiveSidebarItem(item) {
-        [homeBtn, analyticsBtn, openUserManagementBtn].forEach((navItem) => {
+        [homeBtn, analyticsBtn, openUserManagementBtn, backupBtn].forEach((navItem) => {
             if (navItem) {
                 navItem.classList.remove("active");
             }
@@ -139,9 +154,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!isAdministrator()) {
             entryCard.classList.add("hidden");
             userManagementPanel.classList.add("hidden");
+            backupPanel.classList.add("hidden");
             financeInsights.hide();
             homeBtn.classList.remove("hidden");
             openUserManagementBtn.classList.add("hidden");
+            backupBtn.classList.add("hidden");
             dataPanel.classList.remove("hidden");
             setActiveSidebarItem(homeBtn);
             setLayoutMode("center");
@@ -153,8 +170,10 @@ document.addEventListener("DOMContentLoaded", () => {
         dataPanel.classList.remove("hidden");
         entryCard.classList.remove("hidden");
         userManagementPanel.classList.add("hidden");
+        backupPanel.classList.add("hidden");
         homeBtn.classList.remove("hidden");
         openUserManagementBtn.classList.remove("hidden");
+        backupBtn.classList.remove("hidden");
         setActiveSidebarItem(homeBtn);
         setLayoutMode("center");
         loadEntriesFromDB();
@@ -178,6 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
         financeInsights.hide();
         dataPanel.classList.add("hidden");
         entryCard.classList.add("hidden");
+        backupPanel.classList.add("hidden");
         userManagementPanel.classList.remove("hidden");
         setActiveSidebarItem(openUserManagementBtn);
         setLayoutMode("top");
@@ -188,6 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!isAdministrator()) {
             financeInsights.hide();
             userManagementPanel.classList.add("hidden");
+            backupPanel.classList.add("hidden");
             entryCard.classList.add("hidden");
             dataPanel.classList.remove("hidden");
             setActiveSidebarItem(homeBtn);
@@ -199,6 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
         financeInsights.hide();
         dataPanel.classList.remove("hidden");
         userManagementPanel.classList.add("hidden");
+        backupPanel.classList.add("hidden");
         entryCard.classList.remove("hidden");
         setActiveSidebarItem(homeBtn);
         setLayoutMode("center");
@@ -209,13 +231,84 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isAdministrator()) {
             entryCard.classList.add("hidden");
             userManagementPanel.classList.add("hidden");
+            backupPanel.classList.add("hidden");
         }
         dataPanel.classList.add("hidden");
         financeInsights.show();
         setActiveSidebarItem(analyticsBtn);
         setLayoutMode("top");
-        const entries = await getEntriesFromDB();
-        financeInsights.render(entries);
+        await loadAnalyticsData();
+    }
+
+    function showBackupSection() {
+        if (!isAdministrator()) {
+            return;
+        }
+
+        financeInsights.hide();
+        dataPanel.classList.add("hidden");
+        entryCard.classList.add("hidden");
+        userManagementPanel.classList.add("hidden");
+        backupPanel.classList.remove("hidden");
+        setActiveSidebarItem(backupBtn);
+        setLayoutMode("top");
+    }
+
+    function toggleBackupDateInputs() {
+        const selectAll = backupSelectAll.checked;
+        backupFromDate.disabled = selectAll;
+        backupToDate.disabled = selectAll;
+
+        if (selectAll) {
+            backupFromDate.value = "";
+            backupToDate.value = "";
+        }
+    }
+
+    async function loadBackupPathSettings() {
+        try {
+            const response = await apiFetch("api/backup_settings.php");
+            const payload = await response.json();
+            if (payload.status !== "success") {
+                throw new Error(payload.message || "Failed to load backup path.");
+            }
+
+            backupRootPath.value = String(payload.backup_root || "");
+            backupPathStatus.textContent = payload.accessible
+                ? `Saved path is accessible: ${payload.backup_root}`
+                : `Saved path issue: ${payload.message}`;
+            backupPathStatus.classList.toggle("backup-path-error", !payload.accessible);
+        } catch (error) {
+            console.error(error);
+            backupPathStatus.textContent = "Could not load backup path settings.";
+            backupPathStatus.classList.add("backup-path-error");
+        }
+    }
+
+    async function saveBackupPath() {
+        const path = backupRootPath.value.trim();
+
+        try {
+            const response = await apiFetch("api/backup_settings.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ backup_root: path })
+            });
+            const payload = await response.json();
+            if (payload.status !== "success") {
+                throw new Error(payload.message || "Failed to save backup path.");
+            }
+
+            backupRootPath.value = String(payload.backup_root || path || "C:/fin_backup");
+            backupPathStatus.textContent = `Saved path is accessible: ${payload.backup_root}`;
+            backupPathStatus.classList.remove("backup-path-error");
+            Swal.fire("Saved", "Backup path updated successfully.", "success");
+        } catch (error) {
+            console.error(error);
+            backupPathStatus.textContent = error.message || "Could not save backup path.";
+            backupPathStatus.classList.add("backup-path-error");
+            Swal.fire("Invalid path", error.message || "Could not save backup path.", "error");
+        }
     }
 
     function setTodayDate() {
@@ -292,15 +385,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function updateEntriesStats(entries) {
-        const totalEntries = entries.length;
-        const totalIncome = entries.reduce((sum, entry) => {
-            return String(entry.type).toLowerCase() === "income" ? sum + Number(entry.amount || 0) : sum;
-        }, 0);
-        const totalExpense = entries.reduce((sum, entry) => {
-            return String(entry.type).toLowerCase() === "expenditure" ? sum + Number(entry.amount || 0) : sum;
-        }, 0);
-        const netBalance = totalIncome - totalExpense;
+    function updateEntriesStats(summary) {
+        const totalEntries = Number(summary.total_entries || 0);
+        const totalIncome = Number(summary.total_income || 0);
+        const totalExpense = Number(summary.total_expenditure || 0);
+        const netBalance = Number(summary.net_balance || 0);
 
         etTotalEntries.textContent = String(totalEntries);
         etTotalIncome.textContent = formatMoney(totalIncome);
@@ -310,30 +399,17 @@ document.addEventListener("DOMContentLoaded", () => {
         etNetBalance.classList.toggle("metric-positive", netBalance >= 0);
     }
 
-    function getFilteredEntries(entries) {
-        const query = etSearch.value.trim().toLowerCase();
-        const type = etTypeFilter.value.toLowerCase();
-        const accountHeadQuery = etHeadFilter.value.trim().toLowerCase();
-        const fromDate = etFromDate.value;
-        const toDate = etToDate.value;
-
-        return entries.filter((entry) => {
-            const entryType = String(entry.type || "").toLowerCase();
-            const entryDate = String(entry.date || "");
-            const entryHead = String(entry.account_head || "").toLowerCase();
-            const entryNumber = String(entry.voucher_number || "").toLowerCase();
-            const entryDescription = String(entry.description || "").toLowerCase();
-            const matchesQuery = query === "" ||
-                entryNumber.includes(query) ||
-                entryDescription.includes(query) ||
-                entryHead.includes(query);
-            const matchesType = type === "all" || entryType === type;
-            const matchesHead = accountHeadQuery === "" || entryHead.includes(accountHeadQuery);
-            const matchesFrom = !fromDate || entryDate >= fromDate;
-            const matchesTo = !toDate || entryDate <= toDate;
-
-            return matchesQuery && matchesType && matchesHead && matchesFrom && matchesTo;
-        });
+    function buildEntriesTableParams() {
+        const params = new URLSearchParams();
+        params.set("mode", "table");
+        params.set("page", String(currentEntriesPage));
+        params.set("limit", String(entriesPerPage));
+        params.set("search", etSearch.value.trim());
+        params.set("type", etTypeFilter.value.trim());
+        params.set("account_head", etHeadFilter.value.trim());
+        params.set("from_date", etFromDate.value.trim());
+        params.set("to_date", etToDate.value.trim());
+        return params;
     }
 
     function clearEntriesFilters() {
@@ -435,18 +511,59 @@ document.addEventListener("DOMContentLoaded", () => {
         return entriesCache;
     }
 
+    async function loadAnalyticsData() {
+        try {
+            const monthValue = analyticsMonthInput.value || new Date().toISOString().slice(0, 7);
+            if (!analyticsMonthInput.value) {
+                analyticsMonthInput.value = monthValue;
+            }
+
+            const params = new URLSearchParams();
+            params.set("month", monthValue);
+            if (analyticsFinancialYearSelect.value) {
+                params.set("fy_start", analyticsFinancialYearSelect.value);
+            }
+
+            const response = await apiFetch(`api/finance_insights.php?${params.toString()}`);
+            const payload = await response.json();
+            if (payload.status !== "success") {
+                throw new Error(payload.message || "Failed to load finance insights.");
+            }
+
+            financeInsights.renderFromPayload(payload);
+        } catch (error) {
+            if (error.message !== "Unauthorized") {
+                console.error(error);
+                Swal.fire("Error", "Failed to load finance insights.", "error");
+            }
+        }
+    }
+
+    async function getEntriesTableFromDB() {
+        const params = buildEntriesTableParams();
+        const response = await apiFetch(`api/fetch_entries.php?${params.toString()}`);
+        const payload = await response.json();
+        if (payload.status !== "success") {
+            throw new Error(payload.message || "Failed to fetch entries.");
+        }
+        return payload;
+    }
+
     async function loadEntriesFromDB(forceRefresh = false) {
         try {
-            const entries = await getEntriesFromDB(forceRefresh);
-            const filteredEntries = getFilteredEntries(entries);
-            tableBody.innerHTML = "";
-            const totalItems = filteredEntries.length;
-            const totalPages = Math.max(1, Math.ceil(totalItems / entriesPerPage));
-            currentEntriesPage = Math.min(currentEntriesPage, totalPages);
-            const start = (currentEntriesPage - 1) * entriesPerPage;
-            const pageEntries = filteredEntries.slice(start, start + entriesPerPage);
+            if (forceRefresh) {
+                entriesCache = null;
+            }
 
-            pageEntries.forEach((entry, index) => {
+            const payload = await getEntriesTableFromDB();
+            const entries = Array.isArray(payload.items) ? payload.items : [];
+            const totalItems = Number(payload.total_items || 0);
+            const page = Number(payload.page || currentEntriesPage);
+            tableBody.innerHTML = "";
+            currentEntriesPage = page;
+            const start = (currentEntriesPage - 1) * entriesPerPage;
+
+            entries.forEach((entry, index) => {
                 const row = tableBody.insertRow();
                 appendCell(row, String(start + index + 1), "No.");
                 appendCell(row, entry.type, "Type");
@@ -470,7 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
 
-            updateEntriesStats(filteredEntries);
+            updateEntriesStats(payload.summary || {});
             renderEntriesPagination(totalItems);
         } catch (error) {
             if (error.message !== "Unauthorized") {
@@ -544,8 +661,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 await loadEntriesFromDB(true);
             }
             if (financeInsights.isVisible()) {
-                const entries = await getEntriesFromDB(true);
-                financeInsights.render(entries);
+                await loadAnalyticsData();
             }
         } catch (error) {
             if (error.message !== "Unauthorized") {
@@ -583,8 +699,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 Swal.fire("Deleted", res.message, "success");
                 await loadEntriesFromDB(true);
                 if (financeInsights.isVisible()) {
-                    const entries = await getEntriesFromDB();
-                    financeInsights.render(entries);
+                    await loadAnalyticsData();
                 }
                 return;
             }
@@ -681,8 +796,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 Swal.fire("Updated", res.message, "success");
                 await loadEntriesFromDB(true);
                 if (financeInsights.isVisible()) {
-                    const entries = await getEntriesFromDB();
-                    financeInsights.render(entries);
+                    await loadAnalyticsData();
                 }
                 return;
             }
@@ -696,39 +810,76 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    async function exportEntriesByDate() {
-        const fromDate = exportFrom.value;
-        const toDate = exportTo.value;
-
-        if (!fromDate || !toDate) {
-            Swal.fire("Error", "Please select both From and To dates.", "warning");
+    async function createBackup(deleteAfterBackup) {
+        if (!isAdministrator()) {
+            Swal.fire("Not allowed", "Only administrators can run backup.", "warning");
             return;
         }
 
-        try {
-            const formData = new FormData();
-            formData.append("from_date", fromDate);
-            formData.append("to_date", toDate);
+        const selectAll = backupSelectAll.checked;
+        const fromDate = backupFromDate.value.trim();
+        const toDate = backupToDate.value.trim();
+        if (!selectAll && (!fromDate || !toDate)) {
+            Swal.fire("Date range required", "Please select both From and To dates, or enable 'Select all data'.", "warning");
+            return;
+        }
+        if (!selectAll && fromDate > toDate) {
+            Swal.fire("Invalid range", "From date cannot be later than To date.", "warning");
+            return;
+        }
 
-            const response = await apiFetch("api/export_entries.php", {
-                method: "POST",
-                body: formData
+        const hasDateRange = !selectAll;
+        const rangeText = hasDateRange ? `from ${fromDate} to ${toDate}` : "for all dates";
+
+        if (deleteAfterBackup) {
+            const confirmResult = await Swal.fire({
+                title: "Backup and delete data?",
+                text: `This will create backup ${rangeText} and then delete the same backed-up entries from the database.`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, continue"
             });
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const anchor = document.createElement("a");
-            anchor.href = url;
-            anchor.download = `entries_${fromDate}_to_${toDate}.csv`;
-            document.body.appendChild(anchor);
-            anchor.click();
-            anchor.remove();
-            window.URL.revokeObjectURL(url);
-        } catch (error) {
-            if (error.message !== "Unauthorized") {
-                console.error(error);
-                Swal.fire("Error", "Failed to export data.", "error");
+            if (!confirmResult.isConfirmed) {
+                return;
             }
+        }
+
+        try {
+            const response = await apiFetch("api/create_backup.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    delete_after_backup: deleteAfterBackup,
+                    select_all: selectAll,
+                    from_date: hasDateRange ? fromDate : "",
+                    to_date: hasDateRange ? toDate : ""
+                })
+            });
+            const payload = await response.json();
+            if (payload.status !== "success") {
+                throw new Error(payload.message || "Backup failed.");
+            }
+
+            const backupPath = String(payload.backup_path || "");
+            const deletedEntries = Number(payload.deleted_entries || 0);
+            const period = String(payload.backup_period_label || (hasDateRange ? `${fromDate} to ${toDate}` : "All dates"));
+            backupStatusText.textContent = `Latest backup: ${backupPath} (${period})`;
+
+            if (deleteAfterBackup) {
+                entriesCache = null;
+                currentEntriesPage = 1;
+                await loadEntriesFromDB(true);
+                if (financeInsights.isVisible()) {
+                    await loadAnalyticsData();
+                }
+                await Swal.fire("Backup completed", `Backup created at ${backupPath}. Deleted ${deletedEntries} backed-up entries (${period}).`, "success");
+                return;
+            }
+
+            await Swal.fire("Backup completed", `Backup created at ${backupPath} (${period}).`, "success");
+        } catch (error) {
+            console.error(error);
+            Swal.fire("Backup failed", error.message || "Could not create backup.", "error");
         }
     }
 
@@ -742,6 +893,120 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function normalizeHeader(header) {
+        return String(header || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[\s\-\/().]+/g, "_")
+            .replace(/^_+|_+$/g, "");
+    }
+
+    function mapBackupRow(rawRow) {
+        const mapped = {};
+        Object.entries(rawRow || {}).forEach(([key, value]) => {
+            mapped[normalizeHeader(key)] = value;
+        });
+
+        return {
+            type: String(mapped.type || mapped.entry_type || "").trim(),
+            date: String(mapped.date || mapped.entry_date || "").trim(),
+            voucher_number: String(mapped.voucher_number || mapped.receipt_voucher_number || mapped.receipt_number || mapped.voucher_number_no || mapped.number || "").trim(),
+            account_head: String(mapped.account_head || mapped.account || mapped.head || "").trim(),
+            description: String(mapped.description || mapped.remarks || mapped.note || "").trim(),
+            amount: String(mapped.amount || mapped.value || "").trim()
+        };
+    }
+
+    async function readBackupRowsFromFile(file) {
+        if (typeof XLSX === "undefined") {
+            throw new Error("Spreadsheet parser is not available.");
+        }
+
+        const arrayBuffer = await file.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: "array", cellDates: true });
+        const firstSheetName = workbook.SheetNames[0];
+        if (!firstSheetName) {
+            return [];
+        }
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet, {
+            defval: "",
+            raw: false,
+            dateNF: "yyyy-mm-dd"
+        });
+        return rows.map(mapBackupRow).filter((row) => {
+            return row.type || row.date || row.voucher_number || row.account_head || row.description || row.amount;
+        });
+    }
+
+    async function importBackupData() {
+        if (!isAdministrator()) {
+            Swal.fire("Not allowed", "Only administrators can import backup data.", "warning");
+            return;
+        }
+
+        const file = backupFileInput.files && backupFileInput.files[0];
+        if (!file) {
+            Swal.fire("No file selected", "Please choose a CSV or Excel file to import.", "warning");
+            return;
+        }
+
+        try {
+            const rows = await readBackupRowsFromFile(file);
+            if (rows.length === 0) {
+                Swal.fire("No data found", "The selected file does not contain any importable rows.", "warning");
+                return;
+            }
+
+            const confirmResult = await Swal.fire({
+                title: "Import backup data?",
+                text: `Found ${rows.length} rows in "${file.name}". Do you want to import now?`,
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Import"
+            });
+            if (!confirmResult.isConfirmed) {
+                return;
+            }
+
+            const response = await apiFetch("api/import_entries.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ entries: rows })
+            });
+            const payload = await response.json();
+            if (payload.status !== "success") {
+                throw new Error(payload.message || "Import failed.");
+            }
+
+            entriesCache = null;
+            await loadEntriesFromDB(true);
+            if (financeInsights.isVisible()) {
+                await loadAnalyticsData();
+            }
+
+            const stats = payload.stats || {};
+            const errors = Array.isArray(payload.errors) ? payload.errors : [];
+            const errorPreview = errors.slice(0, 5).map((error) => `Row ${error.row}: ${error.message}`).join("<br>");
+            await Swal.fire({
+                title: "Import completed",
+                icon: "success",
+                html: `
+                    <div style="text-align:left;">
+                        <p><strong>Inserted:</strong> ${Number(stats.inserted || 0)}</p>
+                        <p><strong>Skipped duplicates:</strong> ${Number(stats.duplicates || 0)}</p>
+                        <p><strong>Invalid rows:</strong> ${Number(stats.invalid || 0)}</p>
+                        <p><strong>Errors:</strong> ${Number(stats.errors || 0)}</p>
+                        ${errorPreview ? `<p style="margin-top:10px;"><strong>Sample issues:</strong><br>${errorPreview}</p>` : ""}
+                    </div>
+                `
+            });
+        } catch (error) {
+            console.error(error);
+            Swal.fire("Import failed", error.message || "Could not import backup file.", "error");
+        }
+    }
+
     addEntryBtn.addEventListener("click", addEntry);
     clearEntryBtn.addEventListener("click", clearEntryForm);
     homeBtn.addEventListener("click", (event) => {
@@ -752,7 +1017,6 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault();
         await showAnalyticsSection();
     });
-    exportDateBtn.addEventListener("click", exportEntriesByDate);
     logoutBtn.addEventListener("click", (event) => {
         event.preventDefault();
         logout();
@@ -760,6 +1024,11 @@ document.addEventListener("DOMContentLoaded", () => {
     openUserManagementBtn.addEventListener("click", (event) => {
         event.preventDefault();
         showUserManagementSection();
+    });
+    backupBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        showBackupSection();
+        loadBackupPathSettings();
     });
     sidebarToggleBtn.addEventListener("click", toggleSidebar);
     typeSelect.addEventListener("change", updateVoucherLabel);
@@ -790,18 +1059,28 @@ document.addEventListener("DOMContentLoaded", () => {
         currentEntriesPage = 1;
         loadEntriesFromDB();
     });
+    backupFileInput.addEventListener("change", () => {
+        const file = backupFileInput.files && backupFileInput.files[0];
+        backupSelectedFile.textContent = file ? `Selected file: ${file.name}` : "No file selected.";
+    });
+    backupSelectAll.addEventListener("change", toggleBackupDateInputs);
+    saveBackupPathBtn.addEventListener("click", saveBackupPath);
+    backupOnlyBtn.addEventListener("click", () => createBackup(false));
+    backupAndDeleteBtn.addEventListener("click", () => createBackup(true));
+    importBackupBtn.addEventListener("click", importBackupData);
     financeInsights.init(async () => {
         if (!financeInsights.isVisible()) {
             return;
         }
-        const entries = await getEntriesFromDB();
-        financeInsights.render(entries);
+        await loadAnalyticsData();
     });
     userManagement.init();
 
     setTodayDate();
     updateVoucherLabel();
     toggleNewHeadInput();
+    toggleBackupDateInputs();
+    loadBackupPathSettings();
     ensureAuthenticated()
         .then(() => {
             applyRoleRestrictions();

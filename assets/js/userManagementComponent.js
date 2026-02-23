@@ -12,8 +12,11 @@ class UserManagementComponent {
         this.activeUsersEl = options.activeUsersEl;
         this.staffUsersEl = options.staffUsersEl;
         this.adminUsersEl = options.adminUsersEl;
+        this.usersPagination = options.usersPagination;
+        this.usersPerPageSelect = options.usersPerPageSelect;
 
-        this.allUsers = [];
+        this.currentPage = 1;
+        this.usersPerPage = Number(this.usersPerPageSelect?.value) || 15;
     }
 
     init() {
@@ -22,6 +25,10 @@ class UserManagementComponent {
         this.roleFilter.addEventListener("change", () => this.applyFilters());
         this.statusFilter.addEventListener("change", () => this.applyFilters());
         this.clearFiltersBtn.addEventListener("click", () => this.clearFilters());
+        this.usersPerPageSelect.addEventListener("change", () => {
+            this.usersPerPage = Number(this.usersPerPageSelect.value) || 15;
+            this.loadUsers(1);
+        });
     }
 
     createActionButton(label, className, onClick) {
@@ -51,43 +58,22 @@ class UserManagementComponent {
         return cell;
     }
 
-    updateStats(users) {
-        const totalUsers = users.length;
-        const activeUsers = users.filter((user) => Number(user.is_active) === 1).length;
-        const staffUsers = users.filter((user) => this.normalizeRole(user.role) === "staff").length;
-        const adminUsers = users.filter((user) => this.normalizeRole(user.role) === "administrator").length;
-
-        this.totalUsersEl.textContent = String(totalUsers);
-        this.activeUsersEl.textContent = String(activeUsers);
-        this.staffUsersEl.textContent = String(staffUsers);
-        this.adminUsersEl.textContent = String(adminUsers);
+    updateStats(summary) {
+        this.totalUsersEl.textContent = String(Number(summary.total_users || 0));
+        this.activeUsersEl.textContent = String(Number(summary.active_users || 0));
+        this.staffUsersEl.textContent = String(Number(summary.staff_users || 0));
+        this.adminUsersEl.textContent = String(Number(summary.admin_users || 0));
     }
 
     clearFilters() {
         this.searchInput.value = "";
         this.roleFilter.value = "all";
         this.statusFilter.value = "all";
-        this.applyFilters();
+        this.loadUsers(1);
     }
 
     applyFilters() {
-        const query = this.searchInput.value.trim().toLowerCase();
-        const role = this.roleFilter.value;
-        const status = this.statusFilter.value;
-
-        const filtered = this.allUsers.filter((user) => {
-            const normalizedRole = this.normalizeRole(user.role);
-            const normalizedStatus = Number(user.is_active) === 1 ? "active" : "inactive";
-            const matchesQuery = query === "" ||
-                String(user.full_name).toLowerCase().includes(query) ||
-                String(user.email).toLowerCase().includes(query);
-            const matchesRole = role === "all" || normalizedRole === role;
-            const matchesStatus = status === "all" || normalizedStatus === status;
-
-            return matchesQuery && matchesRole && matchesStatus;
-        });
-
-        this.renderUsersTable(filtered);
+        this.loadUsers(1);
     }
 
     renderUsersTable(users) {
@@ -107,13 +93,98 @@ class UserManagementComponent {
         });
     }
 
-    async loadUsers() {
+    renderUsersPagination(totalItems) {
+        const totalPages = Math.max(1, Math.ceil(totalItems / this.usersPerPage));
+        this.currentPage = Math.min(this.currentPage, totalPages);
+
+        if (totalItems <= this.usersPerPage) {
+            this.usersPagination.innerHTML = "";
+            return;
+        }
+
+        const pageNumbers = [];
+        for (let page = 1; page <= totalPages; page += 1) {
+            if (page === 1 || page === totalPages || Math.abs(page - this.currentPage) <= 1) {
+                pageNumbers.push(page);
+            }
+        }
+
+        const compactPageTokens = [];
+        pageNumbers.forEach((page, index) => {
+            if (index > 0 && pageNumbers[index - 1] !== page - 1) {
+                compactPageTokens.push("ellipsis");
+            }
+            compactPageTokens.push(page);
+        });
+
+        const pageButtonsHtml = compactPageTokens.map((token) => {
+            if (token === "ellipsis") {
+                return `<span class="pagination-ellipsis">...</span>`;
+            }
+
+            const page = Number(token);
+            return `
+                <button
+                    type="button"
+                    class="btn btn-secondary pagination-btn pagination-page-btn ${page === this.currentPage ? "active" : ""}"
+                    data-user-page="${page}"
+                >
+                    ${page}
+                </button>
+            `;
+        }).join("");
+
+        this.usersPagination.innerHTML = `
+            <button id="usersPrevPage" class="btn btn-secondary pagination-btn" type="button" ${this.currentPage <= 1 ? "disabled" : ""}>Previous</button>
+            <div class="pagination-pages">${pageButtonsHtml}</div>
+            <span class="pagination-info">Page ${this.currentPage} of ${totalPages}</span>
+            <button id="usersNextPage" class="btn btn-secondary pagination-btn" type="button" ${this.currentPage >= totalPages ? "disabled" : ""}>Next</button>
+        `;
+
+        const prevBtn = document.getElementById("usersPrevPage");
+        const nextBtn = document.getElementById("usersNextPage");
+        const pageButtons = this.usersPagination.querySelectorAll("[data-user-page]");
+        prevBtn.addEventListener("click", () => {
+            if (this.currentPage > 1) {
+                this.loadUsers(this.currentPage - 1);
+            }
+        });
+        nextBtn.addEventListener("click", () => {
+            if (this.currentPage < totalPages) {
+                this.loadUsers(this.currentPage + 1);
+            }
+        });
+        pageButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                const nextPage = Number(button.getAttribute("data-user-page"));
+                if (Number.isFinite(nextPage) && nextPage !== this.currentPage) {
+                    this.loadUsers(nextPage);
+                }
+            });
+        });
+    }
+
+    async loadUsers(page = this.currentPage) {
         try {
-            const response = await this.apiFetch("api/auth/list_users.php");
+            this.currentPage = Math.max(1, Number(page) || 1);
+            const params = new URLSearchParams();
+            params.set("mode", "table");
+            params.set("page", String(this.currentPage));
+            params.set("limit", String(this.usersPerPage));
+            params.set("search", this.searchInput.value.trim());
+            params.set("role", this.roleFilter.value);
+            params.set("status", this.statusFilter.value);
+
+            const response = await this.apiFetch(`api/auth/list_users.php?${params.toString()}`);
             const payload = await response.json();
-            this.allUsers = payload.users || [];
-            this.updateStats(this.allUsers);
-            this.applyFilters();
+            if (payload.status !== "success") {
+                throw new Error(payload.message || "Failed to load users.");
+            }
+
+            this.currentPage = Number(payload.page || this.currentPage);
+            this.renderUsersTable(payload.users || []);
+            this.updateStats(payload.summary || {});
+            this.renderUsersPagination(Number(payload.total_items || 0));
         } catch (error) {
             console.error(error);
             Swal.fire("Error", "Failed to load users.", "error");

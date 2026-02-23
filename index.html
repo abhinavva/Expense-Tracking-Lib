@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="assets/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="assets/js/commonHeaderComponent.js"></script>
     <script src="assets/js/financeInsightsComponent.js"></script>
     <script src="assets/js/userManagementComponent.js"></script>
@@ -31,6 +32,10 @@
             <a id="openUserManagementBtn" class="sidebar-item" href="#">
                 <span class="sidebar-item-icon"><img src="assets/icons/user.png" alt="" loading="lazy"></span>
                 <span class="sidebar-item-label">User Management</span>
+            </a>
+            <a id="backupBtn" class="sidebar-item" href="#">
+                <span class="sidebar-item-icon"><img src="assets/icons/database.png" alt="" loading="lazy"></span>
+                <span class="sidebar-item-label">Backup</span>
             </a>
             <a id="logoutBtn" class="sidebar-item" href="#">
                 <span class="sidebar-item-icon"><img src="assets/icons/logout.png" alt="" loading="lazy"></span>
@@ -198,25 +203,6 @@
                 </div>
             </div>
 
-            <div id="exportSection" class="export-section">
-                <h3>Export Entries to CSV</h3>
-                <div class="export-grid">
-                    <div class="form-field">
-                        <label for="exportFrom">From</label>
-                        <input type="date" id="exportFrom">
-                    </div>
-                    <div class="form-field">
-                        <label for="exportTo">To</label>
-                        <input type="date" id="exportTo">
-                    </div>
-                    <div class="export-action">
-                        <button id="exportDateBtn" class="btn btn-success btn-with-icon" type="button">
-                            <img src="assets/icons/share.png" alt="" loading="lazy">
-                            <span>Export</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
         </section>
 
         <section id="analyticsPanel" class="card hidden">
@@ -344,6 +330,95 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+                <div class="entries-table-footer">
+                    <div class="entries-page-size">
+                        <label for="usersPerPageSelect">Show</label>
+                        <select id="usersPerPageSelect">
+                            <option value="5">5</option>
+                            <option value="15" selected>15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span>items</span>
+                    </div>
+                    <div id="usersPagination" class="entries-pagination"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="backupPanel" class="card hidden">
+            <div class="section-header">
+                <h3>Backup & Import</h3>
+            </div>
+            <div class="backup-workspace">
+                <article class="backup-card-block">
+                    <h4 class="backup-block-title">Create Backup</h4>
+                    <p class="backup-note">Create complete or date-wise backups with unique folder names.</p>
+                    <div class="backup-top-row">
+                        <div class="form-field backup-path-field">
+                            <label for="backupRootPath">Backup Folder Path</label>
+                            <div class="backup-path-row">
+                                <input id="backupRootPath" type="text" placeholder="e.g., D:\LibraryBackups">
+                                <button id="saveBackupPathBtn" class="btn btn-secondary" type="button">Save Path</button>
+                            </div>
+                        </div>
+                        <label class="backup-mode-toggle" for="backupSelectAll">
+                            <input id="backupSelectAll" type="checkbox">
+                            <span>Select all data</span>
+                        </label>
+                    </div>
+                    <p id="backupPathStatus" class="backup-path-status"></p>
+                    <div class="backup-date-row">
+                        <div class="form-field">
+                            <label for="backupFromDate">Backup From</label>
+                            <input id="backupFromDate" type="date">
+                        </div>
+                        <div class="form-field">
+                            <label for="backupToDate">Backup To</label>
+                            <input id="backupToDate" type="date">
+                        </div>
+                    </div>
+                    <div class="backup-actions-row">
+                        <button id="backupOnlyBtn" class="btn btn-success btn-with-icon" type="button">
+                            <img src="assets/icons/share.png" alt="" loading="lazy">
+                            <span>Backup Data</span>
+                        </button>
+                        <button id="backupAndDeleteBtn" class="btn btn-danger btn-with-icon" type="button">
+                            <img src="assets/icons/bin.png" alt="" loading="lazy">
+                            <span>Backup & Delete Backed-up Data</span>
+                        </button>
+                    </div>
+                </article>
+                <article class="backup-card-block">
+                    <h4 class="backup-block-title">Import From File</h4>
+                    <p class="backup-note">
+                        Upload file and import entries in bulk.
+                    </p>
+                    <div class="backup-meta-chips">
+                        <span class="backup-chip">CSV</span>
+                        <span class="backup-chip">XLSX</span>
+                        <span class="backup-chip">XLS</span>
+                    </div>
+                    <div class="backup-columns-grid">
+                        <code>type</code>
+                        <code>date</code>
+                        <code>voucher_number</code>
+                        <code>account_head</code>
+                        <code>description</code>
+                        <code>amount</code>
+                    </div>
+                    <div class="backup-upload-row">
+                        <input id="backupFileInput" type="file" accept=".csv,.xlsx,.xls">
+                        <button id="importBackupBtn" class="btn btn-primary btn-with-icon" type="button">
+                            <img src="assets/icons/folder.png" alt="" loading="lazy">
+                            <span>Import Data</span>
+                        </button>
+                    </div>
+                    <p id="backupSelectedFile" class="backup-selected-file">No file selected.</p>
+                </article>
+            </div>
+            <div class="backup-status-row">
+                <p id="backupStatusText" class="backup-status-text"></p>
             </div>
         </section>
     </main>

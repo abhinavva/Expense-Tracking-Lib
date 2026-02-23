@@ -89,6 +89,31 @@ class FinanceInsightsComponent {
         this.renderFinancialMetrics("fyMetrics", fyIncome, fyExpense);
     }
 
+    renderFromPayload(payload) {
+        this.setDefaultAnalyticsMonth();
+        if (payload && payload.selected_month) {
+            this.monthInput.value = payload.selected_month;
+        }
+
+        this.setFinancialYearOptions(
+            Array.isArray(payload?.fy_options) ? payload.fy_options : [],
+            Number(payload?.selected_fy_start || 0)
+        );
+
+        const monthlyIncome = payload?.monthly_income || {};
+        const monthlyExpense = payload?.monthly_expense || {};
+        const fyIncome = payload?.fy_income || {};
+        const fyExpense = payload?.fy_expense || {};
+
+        this.renderPieChart("monthlyIncomeChart", "monthlyIncomeEmpty", "monthlyIncomeBreakdown", "monthlyIncomeTotal", monthlyIncome, "Income by Account Head", "Total Income");
+        this.renderPieChart("monthlyExpenseChart", "monthlyExpenseEmpty", "monthlyExpenseBreakdown", "monthlyExpenseTotal", monthlyExpense, "Expenditure by Account Head", "Total Expenditure");
+        this.renderPieChart("fyIncomeChart", "fyIncomeEmpty", "fyIncomeBreakdown", "fyIncomeTotal", fyIncome, "Income by Account Head", "Total Income");
+        this.renderPieChart("fyExpenseChart", "fyExpenseEmpty", "fyExpenseBreakdown", "fyExpenseTotal", fyExpense, "Expenditure by Account Head", "Total Expenditure");
+
+        this.renderFinancialMetrics("monthlyMetrics", monthlyIncome, monthlyExpense);
+        this.renderFinancialMetrics("fyMetrics", fyIncome, fyExpense);
+    }
+
     setDefaultAnalyticsMonth() {
         if (!this.monthInput.value) {
             this.monthInput.value = new Date().toISOString().slice(0, 7);
@@ -336,6 +361,41 @@ class FinanceInsightsComponent {
             return;
         }
         this.financialYearSelect.value = String(currentFyStart);
+    }
+
+    setFinancialYearOptions(years, selectedYear) {
+        if (!this.financialYearSelect) {
+            return;
+        }
+
+        const currentSelected = this.financialYearSelect.value;
+        const parsedYears = years
+            .map((year) => Number(year))
+            .filter((year) => Number.isFinite(year) && year > 0)
+            .sort((a, b) => b - a);
+        const uniqueYears = [...new Set(parsedYears)];
+
+        this.financialYearSelect.innerHTML = "";
+        uniqueYears.forEach((startYear) => {
+            const option = document.createElement("option");
+            option.value = String(startYear);
+            option.textContent = this.getFinancialYearLabel(startYear);
+            this.financialYearSelect.appendChild(option);
+        });
+
+        if (selectedYear && uniqueYears.includes(selectedYear)) {
+            this.financialYearSelect.value = String(selectedYear);
+            return;
+        }
+
+        if (currentSelected && uniqueYears.includes(Number(currentSelected))) {
+            this.financialYearSelect.value = currentSelected;
+            return;
+        }
+
+        if (uniqueYears.length > 0) {
+            this.financialYearSelect.value = String(uniqueYears[0]);
+        }
     }
 }
 
