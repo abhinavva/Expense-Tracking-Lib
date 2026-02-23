@@ -3,12 +3,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const entryCard = document.getElementById("entryCard");
     const addEntryBtn = document.getElementById("addEntryBtn");
     const homeBtn = document.getElementById("homeBtn");
-    const viewBtn = document.getElementById("viewBtn");
-    const viewBtnLabel = document.getElementById("viewBtnLabel");
     const analyticsBtn = document.getElementById("analyticsBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const dataPanel = document.getElementById("dataPanel");
     const analyticsPanel = document.getElementById("analyticsPanel");
+    const analyticsMonthlyTabBtn = document.getElementById("analyticsMonthlyTabBtn");
+    const analyticsFyTabBtn = document.getElementById("analyticsFyTabBtn");
+    const analyticsMonthlyView = document.getElementById("analyticsMonthlyView");
+    const analyticsFyView = document.getElementById("analyticsFyView");
     const analyticsMonthInput = document.getElementById("analyticsMonth");
     const analyticsFinancialYearSelect = document.getElementById("analyticsFinancialYear");
     const tableBody = document.querySelector("#entriesTable tbody");
@@ -27,13 +29,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const exportDateBtn = document.getElementById("exportDateBtn");
     const exportFrom = document.getElementById("exportFrom");
     const exportTo = document.getElementById("exportTo");
+    const entriesPagination = document.getElementById("entriesPagination");
     const currentUserName = document.getElementById("currentUserName");
     const currentUserRole = document.getElementById("currentUserRole");
 
     let loggedInUser = null;
     let entriesCache = null;
+    let currentEntriesPage = 1;
+    const entriesPerPage = 10;
     const financeInsights = new window.FinanceInsightsComponent({
         panel: analyticsPanel,
+        monthlyTabBtn: analyticsMonthlyTabBtn,
+        fyTabBtn: analyticsFyTabBtn,
+        monthlyView: analyticsMonthlyView,
+        fyView: analyticsFyView,
         monthInput: analyticsMonthInput,
         financialYearSelect: analyticsFinancialYearSelect
     });
@@ -56,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function setActiveSidebarItem(item) {
-        [homeBtn, viewBtn, analyticsBtn, openUserManagementBtn].forEach((navItem) => {
+        [homeBtn, analyticsBtn, openUserManagementBtn].forEach((navItem) => {
             if (navItem) {
                 navItem.classList.remove("active");
             }
@@ -105,19 +114,19 @@ document.addEventListener("DOMContentLoaded", () => {
             homeBtn.classList.add("hidden");
             openUserManagementBtn.classList.add("hidden");
             dataPanel.classList.remove("hidden");
-            viewBtnLabel.textContent = "Hide Entries";
-            setActiveSidebarItem(viewBtn);
+            setActiveSidebarItem(null);
             loadEntriesFromDB();
             return;
         }
 
         financeInsights.hide();
-        dataPanel.classList.add("hidden");
-        viewBtnLabel.textContent = "View Entries";
+        dataPanel.classList.remove("hidden");
         entryCard.classList.remove("hidden");
+        userManagementPanel.classList.add("hidden");
         homeBtn.classList.remove("hidden");
         openUserManagementBtn.classList.remove("hidden");
         setActiveSidebarItem(homeBtn);
+        loadEntriesFromDB();
     }
 
     function toggleSidebar() {
@@ -133,7 +142,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         financeInsights.hide();
         dataPanel.classList.add("hidden");
-        viewBtnLabel.textContent = "View Entries";
         entryCard.classList.add("hidden");
         userManagementPanel.classList.remove("hidden");
         setActiveSidebarItem(openUserManagementBtn);
@@ -146,11 +154,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         financeInsights.hide();
-        dataPanel.classList.add("hidden");
-        viewBtnLabel.textContent = "View Entries";
+        dataPanel.classList.remove("hidden");
         userManagementPanel.classList.add("hidden");
         entryCard.classList.remove("hidden");
         setActiveSidebarItem(homeBtn);
+        loadEntriesFromDB();
     }
 
     async function showAnalyticsSection() {
@@ -159,7 +167,6 @@ document.addEventListener("DOMContentLoaded", () => {
             userManagementPanel.classList.add("hidden");
         }
         dataPanel.classList.add("hidden");
-        viewBtnLabel.textContent = "View Entries";
         financeInsights.show();
         setActiveSidebarItem(analyticsBtn);
         const entries = await getEntriesFromDB();
@@ -211,6 +218,84 @@ document.addEventListener("DOMContentLoaded", () => {
         return cell;
     }
 
+    function renderEntriesPagination(totalItems) {
+        const totalPages = Math.max(1, Math.ceil(totalItems / entriesPerPage));
+        currentEntriesPage = Math.min(currentEntriesPage, totalPages);
+
+        if (totalItems <= entriesPerPage) {
+            entriesPagination.innerHTML = "";
+            return;
+        }
+
+        const pageNumbers = [];
+        for (let page = 1; page <= totalPages; page += 1) {
+            if (
+                page === 1 ||
+                page === totalPages ||
+                Math.abs(page - currentEntriesPage) <= 1
+            ) {
+                pageNumbers.push(page);
+            }
+        }
+
+        const compactPageTokens = [];
+        pageNumbers.forEach((page, index) => {
+            if (index > 0 && pageNumbers[index - 1] !== page - 1) {
+                compactPageTokens.push("ellipsis");
+            }
+            compactPageTokens.push(page);
+        });
+
+        const pageButtonsHtml = compactPageTokens.map((token) => {
+            if (token === "ellipsis") {
+                return `<span class="pagination-ellipsis">...</span>`;
+            }
+
+            const page = Number(token);
+            return `
+                <button
+                    type="button"
+                    class="btn btn-secondary pagination-btn pagination-page-btn ${page === currentEntriesPage ? "active" : ""}"
+                    data-page="${page}"
+                >
+                    ${page}
+                </button>
+            `;
+        }).join("");
+
+        entriesPagination.innerHTML = `
+            <button id="entriesPrevPage" class="btn btn-secondary pagination-btn" type="button" ${currentEntriesPage <= 1 ? "disabled" : ""}>Previous</button>
+            <div class="pagination-pages">${pageButtonsHtml}</div>
+            <span class="pagination-info">Page ${currentEntriesPage} of ${totalPages}</span>
+            <button id="entriesNextPage" class="btn btn-secondary pagination-btn" type="button" ${currentEntriesPage >= totalPages ? "disabled" : ""}>Next</button>
+        `;
+
+        const prevBtn = document.getElementById("entriesPrevPage");
+        const nextBtn = document.getElementById("entriesNextPage");
+        const pageButtons = entriesPagination.querySelectorAll(".pagination-page-btn");
+        prevBtn.addEventListener("click", () => {
+            if (currentEntriesPage > 1) {
+                currentEntriesPage -= 1;
+                loadEntriesFromDB();
+            }
+        });
+        nextBtn.addEventListener("click", () => {
+            if (currentEntriesPage < totalPages) {
+                currentEntriesPage += 1;
+                loadEntriesFromDB();
+            }
+        });
+        pageButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                const nextPage = Number(button.getAttribute("data-page"));
+                if (Number.isFinite(nextPage) && nextPage !== currentEntriesPage) {
+                    currentEntriesPage = nextPage;
+                    loadEntriesFromDB();
+                }
+            });
+        });
+    }
+
     async function getEntriesFromDB(forceRefresh = false) {
         if (!forceRefresh && Array.isArray(entriesCache)) {
             return entriesCache;
@@ -226,9 +311,15 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const entries = await getEntriesFromDB(forceRefresh);
             tableBody.innerHTML = "";
+            const totalItems = entries.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / entriesPerPage));
+            currentEntriesPage = Math.min(currentEntriesPage, totalPages);
+            const start = (currentEntriesPage - 1) * entriesPerPage;
+            const pageEntries = entries.slice(start, start + entriesPerPage);
 
-            entries.forEach((entry) => {
+            pageEntries.forEach((entry, index) => {
                 const row = tableBody.insertRow();
+                appendCell(row, String(start + index + 1), "No.");
                 appendCell(row, entry.type, "Type");
                 appendCell(row, entry.date, "Date");
                 appendCell(row, entry.voucher_number, "Receipt/Voucher Number");
@@ -249,6 +340,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     actionsCell.textContent = "-";
                 }
             });
+
+            renderEntriesPagination(totalItems);
         } catch (error) {
             if (error.message !== "Unauthorized") {
                 console.error("Error fetching entries:", error);
@@ -310,6 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             entriesCache = null;
+            currentEntriesPage = 1;
             entryForm.reset();
             setTodayDate();
             newHeadContainer.classList.add("hidden");
@@ -508,29 +602,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function toggleDataPanel() {
-        const isHidden = dataPanel.classList.contains("hidden");
-        if (isHidden) {
-            if (isAdministrator()) {
-                entryCard.classList.add("hidden");
-                userManagementPanel.classList.add("hidden");
-            }
-            financeInsights.hide();
-            dataPanel.classList.remove("hidden");
-            viewBtnLabel.textContent = "Hide Entries";
-            setActiveSidebarItem(viewBtn);
-            loadEntriesFromDB();
-            return;
-        }
-
-        dataPanel.classList.add("hidden");
-        viewBtnLabel.textContent = "View Entries";
-        if (isAdministrator()) {
-            showHomeSection();
-            return;
-        }
-    }
-
     async function logout() {
         try {
             await apiFetch("api/auth/logout.php", { method: "POST" });
@@ -545,10 +616,6 @@ document.addEventListener("DOMContentLoaded", () => {
     homeBtn.addEventListener("click", (event) => {
         event.preventDefault();
         showHomeSection();
-    });
-    viewBtn.addEventListener("click", (event) => {
-        event.preventDefault();
-        toggleDataPanel();
     });
     analyticsBtn.addEventListener("click", async (event) => {
         event.preventDefault();

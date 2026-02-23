@@ -1,6 +1,10 @@
 class FinanceInsightsComponent {
     constructor(options) {
         this.panel = options.panel;
+        this.monthlyTabBtn = options.monthlyTabBtn;
+        this.fyTabBtn = options.fyTabBtn;
+        this.monthlyView = options.monthlyView;
+        this.fyView = options.fyView;
         this.monthInput = options.monthInput;
         this.financialYearSelect = options.financialYearSelect;
 
@@ -12,11 +16,19 @@ class FinanceInsightsComponent {
     }
 
     init(onFilterChange) {
+        this.onFilterChange = onFilterChange;
+
         if (this.monthInput) {
             this.monthInput.addEventListener("change", onFilterChange);
         }
         if (this.financialYearSelect) {
             this.financialYearSelect.addEventListener("change", onFilterChange);
+        }
+        if (this.monthlyTabBtn) {
+            this.monthlyTabBtn.addEventListener("click", () => this.switchView("monthly"));
+        }
+        if (this.fyTabBtn) {
+            this.fyTabBtn.addEventListener("click", () => this.switchView("fy"));
         }
     }
 
@@ -30,6 +42,26 @@ class FinanceInsightsComponent {
 
     isVisible() {
         return !this.panel.classList.contains("hidden");
+    }
+
+    animateView(viewElement) {
+        if (!viewElement) {
+            return;
+        }
+        viewElement.classList.remove("analytics-view-animate");
+        void viewElement.offsetWidth;
+        viewElement.classList.add("analytics-view-animate");
+    }
+
+    switchView(viewType) {
+        const showMonthly = viewType === "monthly";
+        this.monthlyView.classList.toggle("hidden", !showMonthly);
+        this.fyView.classList.toggle("hidden", showMonthly);
+        this.monthlyTabBtn.classList.toggle("active", showMonthly);
+        this.fyTabBtn.classList.toggle("active", !showMonthly);
+        this.monthlyTabBtn.setAttribute("aria-selected", String(showMonthly));
+        this.fyTabBtn.setAttribute("aria-selected", String(!showMonthly));
+        this.animateView(showMonthly ? this.monthlyView : this.fyView);
     }
 
     render(entries) {
@@ -52,6 +84,9 @@ class FinanceInsightsComponent {
         this.renderPieChart("monthlyExpenseChart", "monthlyExpenseEmpty", "monthlyExpenseBreakdown", "monthlyExpenseTotal", monthlyExpense, "Expenditure by Account Head", "Total Expenditure");
         this.renderPieChart("fyIncomeChart", "fyIncomeEmpty", "fyIncomeBreakdown", "fyIncomeTotal", fyIncome, "Income by Account Head", "Total Income");
         this.renderPieChart("fyExpenseChart", "fyExpenseEmpty", "fyExpenseBreakdown", "fyExpenseTotal", fyExpense, "Expenditure by Account Head", "Total Expenditure");
+
+        this.renderFinancialMetrics("monthlyMetrics", monthlyIncome, monthlyExpense);
+        this.renderFinancialMetrics("fyMetrics", fyIncome, fyExpense);
     }
 
     setDefaultAnalyticsMonth() {
@@ -110,6 +145,68 @@ class FinanceInsightsComponent {
             currency: "INR",
             maximumFractionDigits: 2
         }).format(amount);
+    }
+
+    formatPercent(value) {
+        if (!Number.isFinite(value)) {
+            return "N/A";
+        }
+        return `${value.toFixed(2)}%`;
+    }
+
+    getTotal(totalsMap) {
+        return Object.values(totalsMap).reduce((sum, value) => sum + Number(value || 0), 0);
+    }
+
+    renderFinancialMetrics(containerId, incomeMap, expenseMap) {
+        const container = document.getElementById(containerId);
+        if (!container) {
+            return;
+        }
+
+        const incomeTotal = this.getTotal(incomeMap);
+        const expenseTotal = this.getTotal(expenseMap);
+        const netBalance = incomeTotal - expenseTotal;
+        const savingsRate = incomeTotal > 0 ? (netBalance / incomeTotal) * 100 : NaN;
+        const expenseIncomeRatio = incomeTotal > 0 ? (expenseTotal / incomeTotal) * 100 : NaN;
+        const avgIncomeHead = Object.keys(incomeMap).length > 0 ? incomeTotal / Object.keys(incomeMap).length : 0;
+        const avgExpenseHead = Object.keys(expenseMap).length > 0 ? expenseTotal / Object.keys(expenseMap).length : 0;
+        const netClass = netBalance >= 0 ? "metric-positive" : "metric-negative";
+        const netLabel = netBalance >= 0 ? "Net Surplus" : "Net Deficit";
+
+        container.innerHTML = `
+            <h5 class="analytics-metrics-title">Key Financial Metrics</h5>
+            <div class="analytics-metrics-grid">
+                <div class="analytics-metric-item">
+                    <span>Total Income</span>
+                    <strong>${this.formatCurrency(incomeTotal)}</strong>
+                </div>
+                <div class="analytics-metric-item">
+                    <span>Total Expenditure</span>
+                    <strong>${this.formatCurrency(expenseTotal)}</strong>
+                </div>
+                <div class="analytics-metric-item ${netClass}">
+                    <span>${netLabel}</span>
+                    <strong>${this.formatCurrency(Math.abs(netBalance))}</strong>
+                </div>
+                <div class="analytics-metric-item">
+                    <span>Savings Rate</span>
+                    <strong>${this.formatPercent(savingsRate)}</strong>
+                </div>
+                <div class="analytics-metric-item">
+                    <span>Expense/Income Ratio</span>
+                    <strong>${this.formatPercent(expenseIncomeRatio)}</strong>
+                </div>
+                <div class="analytics-metric-item">
+                    <span>Avg Income / Head</span>
+                    <strong>${this.formatCurrency(avgIncomeHead)}</strong>
+                </div>
+                <div class="analytics-metric-item">
+                    <span>Avg Expense / Head</span>
+                    <strong>${this.formatCurrency(avgExpenseHead)}</strong>
+                </div>
+            </div>
+        `;
     }
 
     renderBreakdown(breakdownId, totalId, labels, values, totalLabel) {

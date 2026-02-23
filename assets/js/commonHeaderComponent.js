@@ -2,8 +2,12 @@
     function renderCommonHeader(hostElement) {
         hostElement.innerHTML = `
             <header class="app-header common-app-header">
-                <h1 class="app-title-local">കാട്ടൂർ ഗ്രാമീണ വായനശാല</h1>
-                <h2 class="app-title">Library Income & Expenditure Tracker</h2>
+                <div class="common-header-inner">
+                    <div class="common-brand">
+                        <p class="common-eyebrow">Library Finance System</p>
+                        <h1 class="common-title-main">Library Income & Expenditure Tracker</h1>
+                    </div>
+                </div>
             </header>
         `;
     }

@@ -23,10 +23,6 @@
                 <span class="sidebar-item-icon">H</span>
                 <span class="sidebar-item-label">Home</span>
             </a>
-            <a id="viewBtn" class="sidebar-item" href="#">
-                <span class="sidebar-item-icon">E</span>
-                <span id="viewBtnLabel" class="sidebar-item-label">View Entries</span>
-            </a>
             <a id="analyticsBtn" class="sidebar-item" href="#">
                 <span class="sidebar-item-icon">A</span>
                 <span class="sidebar-item-label">Finance Insights</span>
@@ -115,12 +111,13 @@
             </form>
         </section>
 
-        <section id="dataPanel" class="card hidden">
+        <section id="dataPanel" class="card">
             <div id="tableContainer" class="table-wrap">
                 <h3>Entries Table</h3>
                 <table id="entriesTable">
                     <thead>
                         <tr>
+                            <th>No.</th>
                             <th>Type</th>
                             <th>Date</th>
                             <th>Receipt/Voucher Number</th>
@@ -132,6 +129,7 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+                <div id="entriesPagination" class="entries-pagination"></div>
             </div>
 
             <div id="exportSection" class="export-section">
@@ -157,54 +155,59 @@
                 <h3>Finance Insights</h3>
             </div>
 
-            <div class="analytics-grid">
-                <div class="analytics-card">
-                    <h4>Monthly Breakdown by Account Head</h4>
-                    <div class="analytics-filter">
-                        <label for="analyticsMonth">Month</label>
-                        <input type="month" id="analyticsMonth">
-                    </div>
-                    <div class="analytics-charts">
-                        <div class="analytics-chart-box">
-                            <h5>Income</h5>
-                            <p id="monthlyIncomeEmpty" class="analytics-empty hidden">No income data for selected month.</p>
-                            <canvas id="monthlyIncomeChart"></canvas>
-                            <ul id="monthlyIncomeBreakdown" class="analytics-breakdown"></ul>
-                            <p id="monthlyIncomeTotal" class="analytics-total"></p>
-                        </div>
-                        <div class="analytics-chart-box">
-                            <h5>Expenditure</h5>
-                            <p id="monthlyExpenseEmpty" class="analytics-empty hidden">No expenditure data for selected month.</p>
-                            <canvas id="monthlyExpenseChart"></canvas>
-                            <ul id="monthlyExpenseBreakdown" class="analytics-breakdown"></ul>
-                            <p id="monthlyExpenseTotal" class="analytics-total"></p>
-                        </div>
-                    </div>
-                </div>
+            <div class="analytics-tabs" role="tablist" aria-label="Insights period">
+                <button id="analyticsMonthlyTabBtn" class="analytics-tab active" type="button" role="tab" aria-selected="true">Monthly Breakdown</button>
+                <button id="analyticsFyTabBtn" class="analytics-tab" type="button" role="tab" aria-selected="false">Financial Year Breakdown</button>
+            </div>
 
-                <div class="analytics-card">
-                    <h4>Financial Year Breakdown by Account Head</h4>
-                    <div class="analytics-filter">
-                        <label for="analyticsFinancialYear">Financial Year</label>
-                        <select id="analyticsFinancialYear"></select>
+            <div id="analyticsMonthlyView" class="analytics-card analytics-view">
+                <h4>Monthly Breakdown by Account Head</h4>
+                <div class="analytics-filter">
+                    <label for="analyticsMonth">Month</label>
+                    <input type="month" id="analyticsMonth">
+                </div>
+                <div class="analytics-charts">
+                    <div class="analytics-chart-box">
+                        <h5>Income</h5>
+                        <p id="monthlyIncomeEmpty" class="analytics-empty hidden">No income data for selected month.</p>
+                        <canvas id="monthlyIncomeChart"></canvas>
+                        <ul id="monthlyIncomeBreakdown" class="analytics-breakdown"></ul>
+                        <p id="monthlyIncomeTotal" class="analytics-total"></p>
                     </div>
-                    <div class="analytics-charts">
-                        <div class="analytics-chart-box">
-                            <h5>Income</h5>
-                            <p id="fyIncomeEmpty" class="analytics-empty hidden">No income data for selected financial year.</p>
-                            <canvas id="fyIncomeChart"></canvas>
-                            <ul id="fyIncomeBreakdown" class="analytics-breakdown"></ul>
-                            <p id="fyIncomeTotal" class="analytics-total"></p>
-                        </div>
-                        <div class="analytics-chart-box">
-                            <h5>Expenditure</h5>
-                            <p id="fyExpenseEmpty" class="analytics-empty hidden">No expenditure data for selected financial year.</p>
-                            <canvas id="fyExpenseChart"></canvas>
-                            <ul id="fyExpenseBreakdown" class="analytics-breakdown"></ul>
-                            <p id="fyExpenseTotal" class="analytics-total"></p>
-                        </div>
+                    <div class="analytics-chart-box">
+                        <h5>Expenditure</h5>
+                        <p id="monthlyExpenseEmpty" class="analytics-empty hidden">No expenditure data for selected month.</p>
+                        <canvas id="monthlyExpenseChart"></canvas>
+                        <ul id="monthlyExpenseBreakdown" class="analytics-breakdown"></ul>
+                        <p id="monthlyExpenseTotal" class="analytics-total"></p>
                     </div>
                 </div>
+                <div id="monthlyMetrics" class="analytics-metrics"></div>
+            </div>
+
+            <div id="analyticsFyView" class="analytics-card analytics-view hidden">
+                <h4>Financial Year Breakdown by Account Head</h4>
+                <div class="analytics-filter">
+                    <label for="analyticsFinancialYear">Financial Year</label>
+                    <select id="analyticsFinancialYear"></select>
+                </div>
+                <div class="analytics-charts">
+                    <div class="analytics-chart-box">
+                        <h5>Income</h5>
+                        <p id="fyIncomeEmpty" class="analytics-empty hidden">No income data for selected financial year.</p>
+                        <canvas id="fyIncomeChart"></canvas>
+                        <ul id="fyIncomeBreakdown" class="analytics-breakdown"></ul>
+                        <p id="fyIncomeTotal" class="analytics-total"></p>
+                    </div>
+                    <div class="analytics-chart-box">
+                        <h5>Expenditure</h5>
+                        <p id="fyExpenseEmpty" class="analytics-empty hidden">No expenditure data for selected financial year.</p>
+                        <canvas id="fyExpenseChart"></canvas>
+                        <ul id="fyExpenseBreakdown" class="analytics-breakdown"></ul>
+                        <p id="fyExpenseTotal" class="analytics-total"></p>
+                    </div>
+                </div>
+                <div id="fyMetrics" class="analytics-metrics"></div>
             </div>
         </section>
 
