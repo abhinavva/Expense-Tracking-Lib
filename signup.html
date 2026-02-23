@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup - Library Tracker</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="assets/js/auth.js" defer></script>
+</head>
+<body>
+    <main class="auth-shell">
+        <section class="card auth-card">
+            <h2 class="auth-title">Initial Setup</h2>
+            <p class="auth-text">Use this page only for first account setup. Later users are managed by an administrator inside the app.</p>
+
+            <form id="signupForm" class="entry-form auth-form">
+                <div class="form-field form-field-wide">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" required placeholder="Your name">
+                </div>
+
+                <div class="form-field form-field-wide">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required placeholder="you@example.com">
+                </div>
+
+                <div class="form-field form-field-wide">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required minlength="8" placeholder="Minimum 8 characters">
+                </div>
+
+                <button id="signupBtn" type="submit" class="btn btn-primary form-field-wide">Create Account</button>
+            </form>
+
+            <p class="auth-footer">
+                Already have an account?
+                <a href="login.html">Login</a>
+            </p>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Income & Expenditure Tracker</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="assets/js/app.js" defer></script>
+</head>
+<body>
+    <main class="app-shell">
+        <section class="auth-toolbar">
+            <div class="auth-user">
+                Signed in as <strong id="currentUserName">-</strong>
+                <span id="currentUserRole" class="role-pill"></span>
+            </div>
+            <button id="logoutBtn" class="btn btn-secondary" type="button">Logout</button>
+        </section>
+
+        <header class="app-header">
+            <h1 class="app-title-local">കാട്ടൂർ ഗ്രാമീണ വായനശാല</h1>
+            <h2 class="app-title">Library Income & Expenditure Tracker</h2>
+            <p class="app-subtitle">Track, update, and export your daily library accounts.</p>
+        </header>
+
+        <section id="entryCard" class="card">
+            <form id="entryForm" class="entry-form">
+                <div class="form-field">
+                    <label for="type">Type</label>
+                    <select id="type" required>
+                        <option value="">Select...</option>
+                        <option value="Income">Income</option>
+                        <option value="Expenditure">Expenditure</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" required>
+                </div>
+
+                <div class="form-field">
+                    <label for="number" id="numberLabel">Receipt/Voucher Number</label>
+                    <input type="text" id="number" placeholder="e.g., REC-001 or VOU-001" required>
+                </div>
+
+                <div class="form-field">
+                    <label for="accountHead">Account Head</label>
+                    <select id="accountHead" required>
+                        <option value="">Select...</option>
+                        <option value="Monthly Subscription">Monthly Subscription</option>
+                        <option value="Entrance Fees">Entrance Fees</option>
+                        <option value="Security Deposit">Security Deposit</option>
+                        <option value="Life Membership">Life Membership</option>
+                        <option value="Grant for Books">Grant for Books</option>
+                        <option value="Library Grant">Library Grant</option>
+                        <option value="Librarian Allowance">Librarian Allowance</option>
+                        <option value="Festival Allowance">Festival Allowance</option>
+                        <option value="Bank Interest">Bank Interest</option>
+                        <option value="Advance">Advance</option>
+                        <option value="Newspaper/Periodicals">Newspaper/Periodicals</option>
+                        <option value="Electricity Charge">Electricity Charge</option>
+                        <option value="Meeting Fees">Meeting Fees</option>
+                        <option value="Miscellaneous Exp">Miscellaneous Exp</option>
+                        <option value="Miscellaneous income">Miscellaneous income</option>
+                        <option value="Refreshment Exp.">Refreshment Exp.</option>
+                        <option value="Add New">Add New...</option>
+                    </select>
+                </div>
+
+                <div id="newHeadContainer" class="form-field form-field-wide hidden">
+                    <label for="newAccountHead">New Account Head</label>
+                    <input type="text" id="newAccountHead" placeholder="Enter new head and it will be added">
+                </div>
+
+                <div class="form-field">
+                    <label for="description">Description</label>
+                    <input type="text" id="description" placeholder="e.g., Additional notes or details" required>
+                </div>
+
+                <div class="form-field">
+                    <label for="amount">Amount (INR)</label>
+                    <input type="number" id="amount" placeholder="e.g., 1000" step="0.01" required>
+                </div>
+
+                <button id="addEntryBtn" class="btn btn-primary form-field-wide" type="button">Add Entry</button>
+            </form>
+        </section>
+
+        <section id="userManagementPanel" class="card hidden">
+            <div class="table-wrap">
+                <div class="section-header">
+                    <h3>User Management</h3>
+                    <button id="createUserBtn" class="btn btn-primary" type="button">Create User</button>
+                </div>
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="toolbar">
+            <button id="viewBtn" class="btn btn-secondary" type="button">View Entries</button>
+        </section>
+
+        <section id="dataPanel" class="card hidden">
+            <div id="tableContainer" class="table-wrap">
+                <h3>Entries Table</h3>
+                <table id="entriesTable">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Receipt/Voucher Number</th>
+                            <th>Account Head</th>
+                            <th>Description</th>
+                            <th>Amount (INR)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div id="exportSection" class="export-section">
+                <h3>Export Entries to CSV</h3>
+                <div class="export-grid">
+                    <div class="form-field">
+                        <label for="exportFrom">From</label>
+                        <input type="date" id="exportFrom">
+                    </div>
+                    <div class="form-field">
+                        <label for="exportTo">To</label>
+                        <input type="date" id="exportTo">
+                    </div>
+                    <div class="export-action">
+                        <button id="exportDateBtn" class="btn btn-success" type="button">Export</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
