@@ -12,7 +12,7 @@
     --card-shadow: 0 6px 25px rgba(0, 0, 0, 0.14);
     --card-shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.18);
     --radius: 14px;
-    --common-header-height: 80px;
+    --common-header-height: 70px;
 }
 
 * {
@@ -669,6 +669,7 @@ select:focus {
     padding: 14px;
     display: grid;
     gap: 12px;
+    min-width: 0;
 }
 
 .backup-block-title {
@@ -747,9 +748,13 @@ select:focus {
 
 .backup-upload-row {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     gap: 10px;
-    flex-wrap: wrap;
+}
+
+.backup-upload-row .btn {
+    width: 100%;
 }
 
 .backup-meta-chips {
@@ -773,6 +778,7 @@ select:focus {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
+    width: 100%;
 }
 
 .backup-columns-grid code {
@@ -782,6 +788,8 @@ select:focus {
     border-radius: 6px;
     font-size: 0.78rem;
     text-align: center;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .backup-date-row {
@@ -806,7 +814,8 @@ select:focus {
 }
 
 #backupFileInput {
-    min-width: 300px;
+    width: 100%;
+    min-width: 0;
     max-width: 100%;
     background: #fff;
     border: 1px solid #c9d9f3;
@@ -1480,34 +1489,74 @@ tr:nth-child(even) td {
         width: 100%;
     }
 
-    .backup-upload-row {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
     .backup-workspace {
         grid-template-columns: 1fr;
+        gap: 10px;
     }
 
     .backup-card-block {
-        padding: 12px;
+        padding: 10px;
+        border-radius: 10px;
+        gap: 10px;
+    }
+
+    #backupPanel.card {
+        padding: 10px 10px 8px;
+        border-radius: 12px;
+    }
+
+    #backupPanel .section-header {
+        margin-bottom: 8px;
+    }
+
+    #backupPanel .backup-workspace,
+    #backupPanel .backup-card-block,
+    #backupPanel .backup-status-row {
+        width: 100%;
+        margin: 0;
+        min-width: 0;
     }
 
     .backup-top-row {
         grid-template-columns: 1fr;
+        gap: 8px;
     }
 
     .backup-path-row {
         grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .backup-path-row .btn {
+        width: 100%;
     }
 
     .backup-date-row {
         grid-template-columns: 1fr;
+        gap: 8px;
     }
 
     .backup-actions-row {
         flex-direction: column;
         align-items: stretch;
+        gap: 8px;
+    }
+
+    .backup-actions-row .btn {
+        flex: 0 0 auto;
+        width: 100%;
+        min-height: 42px;
+        padding: 10px 12px;
+    }
+
+    .backup-note {
+        font-size: 0.84rem;
+        line-height: 1.35;
+    }
+
+    .backup-mode-toggle {
+        width: 100%;
+        justify-content: flex-start;
     }
 
     .backup-columns-grid {
@@ -1518,9 +1567,18 @@ tr:nth-child(even) td {
         min-width: 0;
     }
 
+    .backup-status-row {
+        margin-top: 8px;
+        padding: 8px 10px;
+        min-height: 0;
+    }
+
     .app-shell {
         min-height: auto;
         display: block;
+        width: 100%;
+        max-width: none;
+        margin: 0;
     }
 
     .entry-form {
