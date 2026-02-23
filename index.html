@@ -114,6 +114,53 @@
         <section id="dataPanel" class="card">
             <div id="tableContainer" class="table-wrap">
                 <h3>Entries Table</h3>
+                <div class="et-stats-grid">
+                    <div class="et-stat-card">
+                        <span>Total Entries</span>
+                        <strong id="etTotalEntries">0</strong>
+                    </div>
+                    <div class="et-stat-card">
+                        <span>Total Income</span>
+                        <strong id="etTotalIncome">0.00</strong>
+                    </div>
+                    <div class="et-stat-card">
+                        <span>Total Expenditure</span>
+                        <strong id="etTotalExpense">0.00</strong>
+                    </div>
+                    <div class="et-stat-card">
+                        <span>Net Balance</span>
+                        <strong id="etNetBalance">0.00</strong>
+                    </div>
+                </div>
+                <div class="et-filters">
+                    <div class="form-field">
+                        <label for="etSearch">Search</label>
+                        <input id="etSearch" type="text" placeholder="Receipt/voucher, description, or account head">
+                    </div>
+                    <div class="form-field">
+                        <label for="etTypeFilter">Type</label>
+                        <select id="etTypeFilter">
+                            <option value="all">All</option>
+                            <option value="income">Income</option>
+                            <option value="expenditure">Expenditure</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="etHeadFilter">Account Head</label>
+                        <input id="etHeadFilter" type="text" placeholder="Filter by account head">
+                    </div>
+                    <div class="form-field">
+                        <label for="etFromDate">From</label>
+                        <input id="etFromDate" type="date">
+                    </div>
+                    <div class="form-field">
+                        <label for="etToDate">To</label>
+                        <input id="etToDate" type="date">
+                    </div>
+                    <div class="et-filter-action">
+                        <button id="etClearFilters" class="btn btn-secondary" type="button">Clear</button>
+                    </div>
+                </div>
                 <table id="entriesTable">
                     <thead>
                         <tr>
@@ -215,6 +262,49 @@
             <div class="section-header">
                 <h3 id="userManagementTitle">User Management</h3>
                 <button id="createUserBtn" class="btn btn-primary" type="button">Create User</button>
+            </div>
+            <div class="um-stats-grid">
+                <div class="um-stat-card">
+                    <span>Total Users</span>
+                    <strong id="umTotalUsers">0</strong>
+                </div>
+                <div class="um-stat-card">
+                    <span>Active Users</span>
+                    <strong id="umActiveUsers">0</strong>
+                </div>
+                <div class="um-stat-card">
+                    <span>Staff Users</span>
+                    <strong id="umStaffUsers">0</strong>
+                </div>
+                <div class="um-stat-card">
+                    <span>Administrators</span>
+                    <strong id="umAdminUsers">0</strong>
+                </div>
+            </div>
+            <div class="um-filters">
+                <div class="form-field">
+                    <label for="umSearch">Search</label>
+                    <input id="umSearch" type="text" placeholder="Name or email">
+                </div>
+                <div class="form-field">
+                    <label for="umRoleFilter">Role</label>
+                    <select id="umRoleFilter">
+                        <option value="all">All</option>
+                        <option value="administrator">administrator</option>
+                        <option value="staff">staff</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="umStatusFilter">Status</label>
+                    <select id="umStatusFilter">
+                        <option value="all">All</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="um-filter-action">
+                    <button id="umClearFilters" class="btn btn-secondary" type="button">Clear</button>
+                </div>
             </div>
             <div class="table-wrap">
                 <table id="usersTable">

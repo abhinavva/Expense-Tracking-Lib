@@ -16,7 +16,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const tableBody = document.querySelector("#entriesTable tbody");
     const usersTableBody = document.querySelector("#usersTable tbody");
     const createUserBtn = document.getElementById("createUserBtn");
+    const umSearch = document.getElementById("umSearch");
+    const umRoleFilter = document.getElementById("umRoleFilter");
+    const umStatusFilter = document.getElementById("umStatusFilter");
+    const umClearFilters = document.getElementById("umClearFilters");
+    const umTotalUsers = document.getElementById("umTotalUsers");
+    const umActiveUsers = document.getElementById("umActiveUsers");
+    const umStaffUsers = document.getElementById("umStaffUsers");
+    const umAdminUsers = document.getElementById("umAdminUsers");
     const userManagementPanel = document.getElementById("userManagementPanel");
+    const appShell = document.querySelector(".app-shell");
     const appSidebar = document.getElementById("appSidebar");
     const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
     const openUserManagementBtn = document.getElementById("openUserManagementBtn");
@@ -30,6 +39,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const exportFrom = document.getElementById("exportFrom");
     const exportTo = document.getElementById("exportTo");
     const entriesPagination = document.getElementById("entriesPagination");
+    const etSearch = document.getElementById("etSearch");
+    const etTypeFilter = document.getElementById("etTypeFilter");
+    const etHeadFilter = document.getElementById("etHeadFilter");
+    const etFromDate = document.getElementById("etFromDate");
+    const etToDate = document.getElementById("etToDate");
+    const etClearFilters = document.getElementById("etClearFilters");
+    const etTotalEntries = document.getElementById("etTotalEntries");
+    const etTotalIncome = document.getElementById("etTotalIncome");
+    const etTotalExpense = document.getElementById("etTotalExpense");
+    const etNetBalance = document.getElementById("etNetBalance");
     const currentUserName = document.getElementById("currentUserName");
     const currentUserRole = document.getElementById("currentUserRole");
 
@@ -50,7 +69,15 @@ document.addEventListener("DOMContentLoaded", () => {
         usersTableBody,
         createUserBtn,
         apiFetch,
-        normalizeRole
+        normalizeRole,
+        searchInput: umSearch,
+        roleFilter: umRoleFilter,
+        statusFilter: umStatusFilter,
+        clearFiltersBtn: umClearFilters,
+        totalUsersEl: umTotalUsers,
+        activeUsersEl: umActiveUsers,
+        staffUsersEl: umStaffUsers,
+        adminUsersEl: umAdminUsers
     });
 
     function normalizeRole(role) {
@@ -115,6 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
             openUserManagementBtn.classList.add("hidden");
             dataPanel.classList.remove("hidden");
             setActiveSidebarItem(homeBtn);
+            setLayoutMode("center");
             loadEntriesFromDB();
             return;
         }
@@ -126,6 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
         homeBtn.classList.remove("hidden");
         openUserManagementBtn.classList.remove("hidden");
         setActiveSidebarItem(homeBtn);
+        setLayoutMode("center");
         loadEntriesFromDB();
     }
 
@@ -133,6 +162,10 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.classList.toggle("sidebar-collapsed");
         const isExpanded = !document.body.classList.contains("sidebar-collapsed");
         sidebarToggleBtn.setAttribute("aria-expanded", String(isExpanded));
+    }
+
+    function setLayoutMode(mode) {
+        appShell.classList.toggle("app-shell-top", mode === "top");
     }
 
     async function showUserManagementSection() {
@@ -145,6 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
         entryCard.classList.add("hidden");
         userManagementPanel.classList.remove("hidden");
         setActiveSidebarItem(openUserManagementBtn);
+        setLayoutMode("top");
         await userManagement.loadUsers();
     }
 
@@ -155,6 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
             entryCard.classList.add("hidden");
             dataPanel.classList.remove("hidden");
             setActiveSidebarItem(homeBtn);
+            setLayoutMode("center");
             loadEntriesFromDB();
             return;
         }
@@ -164,6 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
         userManagementPanel.classList.add("hidden");
         entryCard.classList.remove("hidden");
         setActiveSidebarItem(homeBtn);
+        setLayoutMode("center");
         loadEntriesFromDB();
     }
 
@@ -175,6 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
         dataPanel.classList.add("hidden");
         financeInsights.show();
         setActiveSidebarItem(analyticsBtn);
+        setLayoutMode("top");
         const entries = await getEntriesFromDB();
         financeInsights.render(entries);
     }
@@ -222,6 +259,67 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.textContent = value;
         cell.setAttribute("data-label", label);
         return cell;
+    }
+
+    function formatMoney(value) {
+        return Number(value || 0).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function updateEntriesStats(entries) {
+        const totalEntries = entries.length;
+        const totalIncome = entries.reduce((sum, entry) => {
+            return String(entry.type).toLowerCase() === "income" ? sum + Number(entry.amount || 0) : sum;
+        }, 0);
+        const totalExpense = entries.reduce((sum, entry) => {
+            return String(entry.type).toLowerCase() === "expenditure" ? sum + Number(entry.amount || 0) : sum;
+        }, 0);
+        const netBalance = totalIncome - totalExpense;
+
+        etTotalEntries.textContent = String(totalEntries);
+        etTotalIncome.textContent = formatMoney(totalIncome);
+        etTotalExpense.textContent = formatMoney(totalExpense);
+        etNetBalance.textContent = formatMoney(netBalance);
+        etNetBalance.classList.toggle("metric-negative", netBalance < 0);
+        etNetBalance.classList.toggle("metric-positive", netBalance >= 0);
+    }
+
+    function getFilteredEntries(entries) {
+        const query = etSearch.value.trim().toLowerCase();
+        const type = etTypeFilter.value.toLowerCase();
+        const accountHeadQuery = etHeadFilter.value.trim().toLowerCase();
+        const fromDate = etFromDate.value;
+        const toDate = etToDate.value;
+
+        return entries.filter((entry) => {
+            const entryType = String(entry.type || "").toLowerCase();
+            const entryDate = String(entry.date || "");
+            const entryHead = String(entry.account_head || "").toLowerCase();
+            const entryNumber = String(entry.voucher_number || "").toLowerCase();
+            const entryDescription = String(entry.description || "").toLowerCase();
+            const matchesQuery = query === "" ||
+                entryNumber.includes(query) ||
+                entryDescription.includes(query) ||
+                entryHead.includes(query);
+            const matchesType = type === "all" || entryType === type;
+            const matchesHead = accountHeadQuery === "" || entryHead.includes(accountHeadQuery);
+            const matchesFrom = !fromDate || entryDate >= fromDate;
+            const matchesTo = !toDate || entryDate <= toDate;
+
+            return matchesQuery && matchesType && matchesHead && matchesFrom && matchesTo;
+        });
+    }
+
+    function clearEntriesFilters() {
+        etSearch.value = "";
+        etTypeFilter.value = "all";
+        etHeadFilter.value = "";
+        etFromDate.value = "";
+        etToDate.value = "";
+        currentEntriesPage = 1;
+        loadEntriesFromDB();
     }
 
     function renderEntriesPagination(totalItems) {
@@ -316,12 +414,13 @@ document.addEventListener("DOMContentLoaded", () => {
     async function loadEntriesFromDB(forceRefresh = false) {
         try {
             const entries = await getEntriesFromDB(forceRefresh);
+            const filteredEntries = getFilteredEntries(entries);
             tableBody.innerHTML = "";
-            const totalItems = entries.length;
+            const totalItems = filteredEntries.length;
             const totalPages = Math.max(1, Math.ceil(totalItems / entriesPerPage));
             currentEntriesPage = Math.min(currentEntriesPage, totalPages);
             const start = (currentEntriesPage - 1) * entriesPerPage;
-            const pageEntries = entries.slice(start, start + entriesPerPage);
+            const pageEntries = filteredEntries.slice(start, start + entriesPerPage);
 
             pageEntries.forEach((entry, index) => {
                 const row = tableBody.insertRow();
@@ -347,6 +446,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
 
+            updateEntriesStats(filteredEntries);
             renderEntriesPagination(totalItems);
         } catch (error) {
             if (error.message !== "Unauthorized") {
@@ -639,6 +739,27 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarToggleBtn.addEventListener("click", toggleSidebar);
     typeSelect.addEventListener("change", updateVoucherLabel);
     accountHeadSelect.addEventListener("change", toggleNewHeadInput);
+    etSearch.addEventListener("input", () => {
+        currentEntriesPage = 1;
+        loadEntriesFromDB();
+    });
+    etTypeFilter.addEventListener("change", () => {
+        currentEntriesPage = 1;
+        loadEntriesFromDB();
+    });
+    etHeadFilter.addEventListener("input", () => {
+        currentEntriesPage = 1;
+        loadEntriesFromDB();
+    });
+    etFromDate.addEventListener("change", () => {
+        currentEntriesPage = 1;
+        loadEntriesFromDB();
+    });
+    etToDate.addEventListener("change", () => {
+        currentEntriesPage = 1;
+        loadEntriesFromDB();
+    });
+    etClearFilters.addEventListener("click", clearEntriesFilters);
     financeInsights.init(async () => {
         if (!financeInsights.isVisible()) {
             return;

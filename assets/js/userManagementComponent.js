@@ -4,10 +4,24 @@ class UserManagementComponent {
         this.createUserBtn = options.createUserBtn;
         this.apiFetch = options.apiFetch;
         this.normalizeRole = options.normalizeRole;
+        this.searchInput = options.searchInput;
+        this.roleFilter = options.roleFilter;
+        this.statusFilter = options.statusFilter;
+        this.clearFiltersBtn = options.clearFiltersBtn;
+        this.totalUsersEl = options.totalUsersEl;
+        this.activeUsersEl = options.activeUsersEl;
+        this.staffUsersEl = options.staffUsersEl;
+        this.adminUsersEl = options.adminUsersEl;
+
+        this.allUsers = [];
     }
 
     init() {
         this.createUserBtn.addEventListener("click", () => this.openCreateUserDialog());
+        this.searchInput.addEventListener("input", () => this.applyFilters());
+        this.roleFilter.addEventListener("change", () => this.applyFilters());
+        this.statusFilter.addEventListener("change", () => this.applyFilters());
+        this.clearFiltersBtn.addEventListener("click", () => this.clearFilters());
     }
 
     createActionButton(label, className, onClick) {
@@ -26,25 +40,69 @@ class UserManagementComponent {
         return cell;
     }
 
+    updateStats(users) {
+        const totalUsers = users.length;
+        const activeUsers = users.filter((user) => Number(user.is_active) === 1).length;
+        const staffUsers = users.filter((user) => this.normalizeRole(user.role) === "staff").length;
+        const adminUsers = users.filter((user) => this.normalizeRole(user.role) === "administrator").length;
+
+        this.totalUsersEl.textContent = String(totalUsers);
+        this.activeUsersEl.textContent = String(activeUsers);
+        this.staffUsersEl.textContent = String(staffUsers);
+        this.adminUsersEl.textContent = String(adminUsers);
+    }
+
+    clearFilters() {
+        this.searchInput.value = "";
+        this.roleFilter.value = "all";
+        this.statusFilter.value = "all";
+        this.applyFilters();
+    }
+
+    applyFilters() {
+        const query = this.searchInput.value.trim().toLowerCase();
+        const role = this.roleFilter.value;
+        const status = this.statusFilter.value;
+
+        const filtered = this.allUsers.filter((user) => {
+            const normalizedRole = this.normalizeRole(user.role);
+            const normalizedStatus = Number(user.is_active) === 1 ? "active" : "inactive";
+            const matchesQuery = query === "" ||
+                String(user.full_name).toLowerCase().includes(query) ||
+                String(user.email).toLowerCase().includes(query);
+            const matchesRole = role === "all" || normalizedRole === role;
+            const matchesStatus = status === "all" || normalizedStatus === status;
+
+            return matchesQuery && matchesRole && matchesStatus;
+        });
+
+        this.renderUsersTable(filtered);
+    }
+
+    renderUsersTable(users) {
+        this.usersTableBody.innerHTML = "";
+        users.forEach((user) => {
+            const row = this.usersTableBody.insertRow();
+            this.appendCell(row, user.full_name, "Name");
+            this.appendCell(row, user.email, "Email");
+            this.appendCell(row, this.normalizeRole(user.role), "Role");
+            this.appendCell(row, String(Number(user.is_active) === 1 ? "Active" : "Inactive"), "Status");
+
+            const actionsCell = row.insertCell();
+            actionsCell.setAttribute("data-label", "Actions");
+            actionsCell.appendChild(
+                this.createActionButton("Edit User", "action-btn-edit", () => this.openEditUserDialog(user))
+            );
+        });
+    }
+
     async loadUsers() {
         try {
             const response = await this.apiFetch("api/auth/list_users.php");
             const payload = await response.json();
-            this.usersTableBody.innerHTML = "";
-
-            (payload.users || []).forEach((user) => {
-                const row = this.usersTableBody.insertRow();
-                this.appendCell(row, user.full_name, "Name");
-                this.appendCell(row, user.email, "Email");
-                this.appendCell(row, this.normalizeRole(user.role), "Role");
-                this.appendCell(row, String(Number(user.is_active) === 1 ? "Active" : "Inactive"), "Status");
-
-                const actionsCell = row.insertCell();
-                actionsCell.setAttribute("data-label", "Actions");
-                actionsCell.appendChild(
-                    this.createActionButton("Edit User", "action-btn-edit", () => this.openEditUserDialog(user))
-                );
-            });
+            this.allUsers = payload.users || [];
+            this.updateStats(this.allUsers);
+            this.applyFilters();
         } catch (error) {
             console.error(error);
             Swal.fire("Error", "Failed to load users.", "error");
