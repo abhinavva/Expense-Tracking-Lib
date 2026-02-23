@@ -2,13 +2,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const entryForm = document.getElementById("entryForm");
     const entryCard = document.getElementById("entryCard");
     const addEntryBtn = document.getElementById("addEntryBtn");
+    const homeBtn = document.getElementById("homeBtn");
     const viewBtn = document.getElementById("viewBtn");
+    const viewBtnLabel = document.getElementById("viewBtnLabel");
+    const analyticsBtn = document.getElementById("analyticsBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const dataPanel = document.getElementById("dataPanel");
+    const analyticsPanel = document.getElementById("analyticsPanel");
+    const analyticsMonthInput = document.getElementById("analyticsMonth");
+    const analyticsFinancialYearSelect = document.getElementById("analyticsFinancialYear");
     const tableBody = document.querySelector("#entriesTable tbody");
     const usersTableBody = document.querySelector("#usersTable tbody");
     const createUserBtn = document.getElementById("createUserBtn");
     const userManagementPanel = document.getElementById("userManagementPanel");
+    const appSidebar = document.getElementById("appSidebar");
+    const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
+    const openUserManagementBtn = document.getElementById("openUserManagementBtn");
     const typeSelect = document.getElementById("type");
     const numberLabel = document.getElementById("numberLabel");
     const numberInput = document.getElementById("number");
@@ -22,6 +31,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentUserRole = document.getElementById("currentUserRole");
 
     let loggedInUser = null;
+    let entriesCache = null;
+    const financeInsights = new window.FinanceInsightsComponent({
+        panel: analyticsPanel,
+        monthInput: analyticsMonthInput,
+        financialYearSelect: analyticsFinancialYearSelect
+    });
+    const userManagement = new window.UserManagementComponent({
+        usersTableBody,
+        createUserBtn,
+        apiFetch,
+        normalizeRole
+    });
 
     function normalizeRole(role) {
         if (role === "admin") {
@@ -32,6 +53,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function isAdministrator() {
         return loggedInUser && normalizeRole(loggedInUser.role) === "administrator";
+    }
+
+    function setActiveSidebarItem(item) {
+        [homeBtn, viewBtn, analyticsBtn, openUserManagementBtn].forEach((navItem) => {
+            if (navItem) {
+                navItem.classList.remove("active");
+            }
+        });
+        if (item) {
+            item.classList.add("active");
+        }
     }
 
     async function apiFetch(url, options = {}) {
@@ -64,14 +96,74 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function applyRoleRestrictions() {
+        appSidebar.classList.remove("hidden");
+
         if (!isAdministrator()) {
             entryCard.classList.add("hidden");
             userManagementPanel.classList.add("hidden");
+            financeInsights.hide();
+            homeBtn.classList.add("hidden");
+            openUserManagementBtn.classList.add("hidden");
+            dataPanel.classList.remove("hidden");
+            viewBtnLabel.textContent = "Hide Entries";
+            setActiveSidebarItem(viewBtn);
+            loadEntriesFromDB();
             return;
         }
 
+        financeInsights.hide();
+        dataPanel.classList.add("hidden");
+        viewBtnLabel.textContent = "View Entries";
         entryCard.classList.remove("hidden");
+        homeBtn.classList.remove("hidden");
+        openUserManagementBtn.classList.remove("hidden");
+        setActiveSidebarItem(homeBtn);
+    }
+
+    function toggleSidebar() {
+        document.body.classList.toggle("sidebar-collapsed");
+        const isExpanded = !document.body.classList.contains("sidebar-collapsed");
+        sidebarToggleBtn.setAttribute("aria-expanded", String(isExpanded));
+    }
+
+    async function showUserManagementSection() {
+        if (!isAdministrator()) {
+            return;
+        }
+
+        financeInsights.hide();
+        dataPanel.classList.add("hidden");
+        viewBtnLabel.textContent = "View Entries";
+        entryCard.classList.add("hidden");
         userManagementPanel.classList.remove("hidden");
+        setActiveSidebarItem(openUserManagementBtn);
+        await userManagement.loadUsers();
+    }
+
+    function showHomeSection() {
+        if (!isAdministrator()) {
+            return;
+        }
+
+        financeInsights.hide();
+        dataPanel.classList.add("hidden");
+        viewBtnLabel.textContent = "View Entries";
+        userManagementPanel.classList.add("hidden");
+        entryCard.classList.remove("hidden");
+        setActiveSidebarItem(homeBtn);
+    }
+
+    async function showAnalyticsSection() {
+        if (isAdministrator()) {
+            entryCard.classList.add("hidden");
+            userManagementPanel.classList.add("hidden");
+        }
+        dataPanel.classList.add("hidden");
+        viewBtnLabel.textContent = "View Entries";
+        financeInsights.show();
+        setActiveSidebarItem(analyticsBtn);
+        const entries = await getEntriesFromDB();
+        financeInsights.render(entries);
     }
 
     function setTodayDate() {
@@ -119,10 +211,20 @@ document.addEventListener("DOMContentLoaded", () => {
         return cell;
     }
 
-    async function loadEntriesFromDB() {
+    async function getEntriesFromDB(forceRefresh = false) {
+        if (!forceRefresh && Array.isArray(entriesCache)) {
+            return entriesCache;
+        }
+
+        const response = await apiFetch("api/fetch_entries.php");
+        const entries = await response.json();
+        entriesCache = Array.isArray(entries) ? entries : [];
+        return entriesCache;
+    }
+
+    async function loadEntriesFromDB(forceRefresh = false) {
         try {
-            const response = await apiFetch("api/fetch_entries.php");
-            const entries = await response.json();
+            const entries = await getEntriesFromDB(forceRefresh);
             tableBody.innerHTML = "";
 
             entries.forEach((entry) => {
@@ -207,6 +309,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            entriesCache = null;
             entryForm.reset();
             setTodayDate();
             newHeadContainer.classList.add("hidden");
@@ -214,7 +317,11 @@ document.addEventListener("DOMContentLoaded", () => {
             Swal.fire("Saved", "Entry added successfully.", "success");
 
             if (!dataPanel.classList.contains("hidden")) {
-                await loadEntriesFromDB();
+                await loadEntriesFromDB(true);
+            }
+            if (financeInsights.isVisible()) {
+                const entries = await getEntriesFromDB(true);
+                financeInsights.render(entries);
             }
         } catch (error) {
             if (error.message !== "Unauthorized") {
@@ -248,8 +355,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await response.json();
 
             if (res.status === "success") {
+                entriesCache = null;
                 Swal.fire("Deleted", res.message, "success");
-                await loadEntriesFromDB();
+                await loadEntriesFromDB(true);
+                if (financeInsights.isVisible()) {
+                    const entries = await getEntriesFromDB();
+                    financeInsights.render(entries);
+                }
                 return;
             }
 
@@ -266,22 +378,36 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await Swal.fire({
             title: "Edit Entry",
             html: `
-                <div class="swal-form">
-                    <label>Type</label>
-                    <select id="swalType">
-                        <option value="Income" ${entry.type === "Income" ? "selected" : ""}>Income</option>
-                        <option value="Expenditure" ${entry.type === "Expenditure" ? "selected" : ""}>Expenditure</option>
-                    </select>
-                    <label>Date</label>
-                    <input id="swalDate" type="date" value="${entry.date}">
-                    <label>Voucher/Receipt Number</label>
-                    <input id="swalNumber" type="text" value="${entry.voucher_number}">
-                    <label>Account Head</label>
-                    <input id="swalAccountHead" type="text" value="${entry.account_head}">
-                    <label>Description</label>
-                    <input id="swalDescription" type="text" value="${entry.description}">
-                    <label>Amount (INR)</label>
-                    <input id="swalAmount" type="number" step="0.01" value="${entry.amount}">
+                <div class="swal-entry-form">
+                    <div class="swal-entry-grid">
+                        <div class="swal-entry-field">
+                            <label for="swalType">Type</label>
+                            <select id="swalType">
+                                <option value="Income" ${entry.type === "Income" ? "selected" : ""}>Income</option>
+                                <option value="Expenditure" ${entry.type === "Expenditure" ? "selected" : ""}>Expenditure</option>
+                            </select>
+                        </div>
+                        <div class="swal-entry-field">
+                            <label for="swalDate">Date</label>
+                            <input id="swalDate" type="date" value="${entry.date}">
+                        </div>
+                    </div>
+                    <div class="swal-entry-field">
+                        <label for="swalNumber">Voucher/Receipt Number</label>
+                        <input id="swalNumber" type="text" value="${entry.voucher_number}">
+                    </div>
+                    <div class="swal-entry-field">
+                        <label for="swalAccountHead">Account Head</label>
+                        <input id="swalAccountHead" type="text" value="${entry.account_head}">
+                    </div>
+                    <div class="swal-entry-field">
+                        <label for="swalDescription">Description</label>
+                        <input id="swalDescription" type="text" value="${entry.description}">
+                    </div>
+                    <div class="swal-entry-field">
+                        <label for="swalAmount">Amount (INR)</label>
+                        <input id="swalAmount" type="number" step="0.01" value="${entry.amount}">
+                    </div>
                 </div>
             `,
             showCancelButton: true,
@@ -327,8 +453,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await response.json();
 
             if (res.status === "success") {
+                entriesCache = null;
                 Swal.fire("Updated", res.message, "success");
-                await loadEntriesFromDB();
+                await loadEntriesFromDB(true);
+                if (financeInsights.isVisible()) {
+                    const entries = await getEntriesFromDB();
+                    financeInsights.render(entries);
+                }
                 return;
             }
 
@@ -377,163 +508,27 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    async function loadUsers() {
-        if (!isAdministrator()) {
-            return;
-        }
-
-        try {
-            const response = await apiFetch("api/auth/list_users.php");
-            const payload = await response.json();
-            usersTableBody.innerHTML = "";
-
-            (payload.users || []).forEach((user) => {
-                const row = usersTableBody.insertRow();
-                appendCell(row, user.full_name, "Name");
-                appendCell(row, user.email, "Email");
-                appendCell(row, normalizeRole(user.role), "Role");
-                appendCell(row, String(Number(user.is_active) === 1 ? "Active" : "Inactive"), "Status");
-
-                const actionsCell = row.insertCell();
-                actionsCell.setAttribute("data-label", "Actions");
-                actionsCell.appendChild(
-                    createActionButton("Edit User", "action-btn-edit", () => openEditUserDialog(user))
-                );
-            });
-        } catch (error) {
-            console.error(error);
-            Swal.fire("Error", "Failed to load users.", "error");
-        }
-    }
-
-    async function openCreateUserDialog() {
-        const result = await Swal.fire({
-            title: "Create User",
-            html: `
-                <label>Full Name</label>
-                <input id="userFullName" type="text">
-                <label>Email</label>
-                <input id="userEmail" type="email">
-                <label>Password</label>
-                <input id="userPassword" type="password">
-                <label>Role</label>
-                <select id="userRole">
-                    <option value="staff">staff</option>
-                    <option value="administrator">administrator</option>
-                </select>
-            `,
-            showCancelButton: true,
-            confirmButtonText: "Create",
-            preConfirm: () => {
-                return {
-                    full_name: document.getElementById("userFullName").value.trim(),
-                    email: document.getElementById("userEmail").value.trim(),
-                    password: document.getElementById("userPassword").value,
-                    role: document.getElementById("userRole").value
-                };
-            }
-        });
-
-        if (!result.isConfirmed) {
-            return;
-        }
-
-        const data = result.value;
-        if (!data.full_name || !data.email || !data.password) {
-            Swal.fire("Missing fields", "All fields are required.", "warning");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("full_name", data.full_name);
-        formData.append("email", data.email);
-        formData.append("password", data.password);
-        formData.append("role", data.role);
-
-        const response = await apiFetch("api/auth/signup.php", { method: "POST", body: formData });
-        const payload = await response.json();
-        if (payload.status !== "success") {
-            Swal.fire("Error", payload.message || "Failed to create user.", "error");
-            return;
-        }
-
-        Swal.fire("Created", "User account created successfully.", "success");
-        await loadUsers();
-    }
-
-    async function openEditUserDialog(user) {
-        const result = await Swal.fire({
-            title: "Edit User",
-            html: `
-                <label>Full Name</label>
-                <input id="editUserFullName" type="text" value="${user.full_name}">
-                <label>Email</label>
-                <input id="editUserEmail" type="email" value="${user.email}">
-                <label>Role</label>
-                <select id="editUserRole">
-                    <option value="staff" ${normalizeRole(user.role) === "staff" ? "selected" : ""}>staff</option>
-                    <option value="administrator" ${normalizeRole(user.role) === "administrator" ? "selected" : ""}>administrator</option>
-                </select>
-                <label>Status</label>
-                <select id="editUserStatus">
-                    <option value="1" ${Number(user.is_active) === 1 ? "selected" : ""}>Active</option>
-                    <option value="0" ${Number(user.is_active) !== 1 ? "selected" : ""}>Inactive</option>
-                </select>
-                <label>New Password (optional)</label>
-                <input id="editUserPassword" type="password" placeholder="Leave blank to keep unchanged">
-            `,
-            showCancelButton: true,
-            confirmButtonText: "Save",
-            preConfirm: () => {
-                return {
-                    user_id: user.id,
-                    full_name: document.getElementById("editUserFullName").value.trim(),
-                    email: document.getElementById("editUserEmail").value.trim(),
-                    role: document.getElementById("editUserRole").value,
-                    is_active: document.getElementById("editUserStatus").value,
-                    password: document.getElementById("editUserPassword").value
-                };
-            }
-        });
-
-        if (!result.isConfirmed) {
-            return;
-        }
-
-        const data = result.value;
-        if (!data.full_name || !data.email) {
-            Swal.fire("Missing fields", "Name and email are required.", "warning");
-            return;
-        }
-
-        const formData = new FormData();
-        Object.entries(data).forEach(([key, value]) => formData.append(key, value));
-
-        const response = await apiFetch("api/auth/update_user.php", {
-            method: "POST",
-            body: formData
-        });
-        const payload = await response.json();
-        if (payload.status !== "success") {
-            Swal.fire("Error", payload.message || "Failed to update user.", "error");
-            return;
-        }
-
-        Swal.fire("Updated", "User details updated successfully.", "success");
-        await loadUsers();
-    }
-
     function toggleDataPanel() {
         const isHidden = dataPanel.classList.contains("hidden");
         if (isHidden) {
+            if (isAdministrator()) {
+                entryCard.classList.add("hidden");
+                userManagementPanel.classList.add("hidden");
+            }
+            financeInsights.hide();
             dataPanel.classList.remove("hidden");
-            viewBtn.textContent = "Hide Entries";
+            viewBtnLabel.textContent = "Hide Entries";
+            setActiveSidebarItem(viewBtn);
             loadEntriesFromDB();
             return;
         }
 
         dataPanel.classList.add("hidden");
-        viewBtn.textContent = "View Entries";
+        viewBtnLabel.textContent = "View Entries";
+        if (isAdministrator()) {
+            showHomeSection();
+            return;
+        }
     }
 
     async function logout() {
@@ -547,12 +542,38 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     addEntryBtn.addEventListener("click", addEntry);
-    viewBtn.addEventListener("click", toggleDataPanel);
+    homeBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        showHomeSection();
+    });
+    viewBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        toggleDataPanel();
+    });
+    analyticsBtn.addEventListener("click", async (event) => {
+        event.preventDefault();
+        await showAnalyticsSection();
+    });
     exportDateBtn.addEventListener("click", exportEntriesByDate);
-    logoutBtn.addEventListener("click", logout);
-    createUserBtn.addEventListener("click", openCreateUserDialog);
+    logoutBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        logout();
+    });
+    openUserManagementBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        showUserManagementSection();
+    });
+    sidebarToggleBtn.addEventListener("click", toggleSidebar);
     typeSelect.addEventListener("change", updateVoucherLabel);
     accountHeadSelect.addEventListener("change", toggleNewHeadInput);
+    financeInsights.init(async () => {
+        if (!financeInsights.isVisible()) {
+            return;
+        }
+        const entries = await getEntriesFromDB();
+        financeInsights.render(entries);
+    });
+    userManagement.init();
 
     setTodayDate();
     updateVoucherLabel();
@@ -560,9 +581,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ensureAuthenticated()
         .then(() => {
             applyRoleRestrictions();
-            if (isAdministrator()) {
-                loadUsers();
-            }
         })
         .catch(() => {
             window.location.href = "login.html";

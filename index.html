@@ -6,23 +6,50 @@
     <title>Library Income & Expenditure Tracker</title>
     <link rel="stylesheet" href="assets/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="assets/js/commonHeaderComponent.js"></script>
+    <script src="assets/js/financeInsightsComponent.js"></script>
+    <script src="assets/js/userManagementComponent.js"></script>
     <script src="assets/js/app.js" defer></script>
 </head>
-<body>
-    <main class="app-shell">
-        <section class="auth-toolbar">
-            <div class="auth-user">
+<body class="app-page">
+    <aside id="appSidebar" class="sidebar hidden">
+        <button id="sidebarToggleBtn" class="sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
+            <span class="sidebar-toggle-icon">&#9776;</span>
+            <span class="sidebar-toggle-label">Menu</span>
+        </button>
+        <nav class="sidebar-nav" aria-label="Primary navigation">
+            <a id="homeBtn" class="sidebar-item" href="#">
+                <span class="sidebar-item-icon">H</span>
+                <span class="sidebar-item-label">Home</span>
+            </a>
+            <a id="viewBtn" class="sidebar-item" href="#">
+                <span class="sidebar-item-icon">E</span>
+                <span id="viewBtnLabel" class="sidebar-item-label">View Entries</span>
+            </a>
+            <a id="analyticsBtn" class="sidebar-item" href="#">
+                <span class="sidebar-item-icon">A</span>
+                <span class="sidebar-item-label">Finance Insights</span>
+            </a>
+            <a id="openUserManagementBtn" class="sidebar-item" href="#">
+                <span class="sidebar-item-icon">U</span>
+                <span class="sidebar-item-label">User Management</span>
+            </a>
+            <a id="logoutBtn" class="sidebar-item" href="#">
+                <span class="sidebar-item-icon">L</span>
+                <span class="sidebar-item-label">Logout</span>
+            </a>
+        </nav>
+        <div class="sidebar-user">
+            <div class="sidebar-user-text">
                 Signed in as <strong id="currentUserName">-</strong>
-                <span id="currentUserRole" class="role-pill"></span>
             </div>
-            <button id="logoutBtn" class="btn btn-secondary" type="button">Logout</button>
-        </section>
+            <span id="currentUserRole" class="role-pill"></span>
+        </div>
+    </aside>
 
-        <header class="app-header">
-            <h1 class="app-title-local">കാട്ടൂർ ഗ്രാമീണ വായനശാല</h1>
-            <h2 class="app-title">Library Income & Expenditure Tracker</h2>
-            <p class="app-subtitle">Track, update, and export your daily library accounts.</p>
-        </header>
+    <main class="app-shell">
+        <div data-common-header></div>
 
         <section id="entryCard" class="card">
             <form id="entryForm" class="entry-form">
@@ -88,31 +115,6 @@
             </form>
         </section>
 
-        <section id="userManagementPanel" class="card hidden">
-            <div class="table-wrap">
-                <div class="section-header">
-                    <h3>User Management</h3>
-                    <button id="createUserBtn" class="btn btn-primary" type="button">Create User</button>
-                </div>
-                <table id="usersTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="toolbar">
-            <button id="viewBtn" class="btn btn-secondary" type="button">View Entries</button>
-        </section>
-
         <section id="dataPanel" class="card hidden">
             <div id="tableContainer" class="table-wrap">
                 <h3>Entries Table</h3>
@@ -147,6 +149,83 @@
                         <button id="exportDateBtn" class="btn btn-success" type="button">Export</button>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section id="analyticsPanel" class="card hidden">
+            <div class="section-header">
+                <h3>Finance Insights</h3>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h4>Monthly Breakdown by Account Head</h4>
+                    <div class="analytics-filter">
+                        <label for="analyticsMonth">Month</label>
+                        <input type="month" id="analyticsMonth">
+                    </div>
+                    <div class="analytics-charts">
+                        <div class="analytics-chart-box">
+                            <h5>Income</h5>
+                            <p id="monthlyIncomeEmpty" class="analytics-empty hidden">No income data for selected month.</p>
+                            <canvas id="monthlyIncomeChart"></canvas>
+                            <ul id="monthlyIncomeBreakdown" class="analytics-breakdown"></ul>
+                            <p id="monthlyIncomeTotal" class="analytics-total"></p>
+                        </div>
+                        <div class="analytics-chart-box">
+                            <h5>Expenditure</h5>
+                            <p id="monthlyExpenseEmpty" class="analytics-empty hidden">No expenditure data for selected month.</p>
+                            <canvas id="monthlyExpenseChart"></canvas>
+                            <ul id="monthlyExpenseBreakdown" class="analytics-breakdown"></ul>
+                            <p id="monthlyExpenseTotal" class="analytics-total"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <h4>Financial Year Breakdown by Account Head</h4>
+                    <div class="analytics-filter">
+                        <label for="analyticsFinancialYear">Financial Year</label>
+                        <select id="analyticsFinancialYear"></select>
+                    </div>
+                    <div class="analytics-charts">
+                        <div class="analytics-chart-box">
+                            <h5>Income</h5>
+                            <p id="fyIncomeEmpty" class="analytics-empty hidden">No income data for selected financial year.</p>
+                            <canvas id="fyIncomeChart"></canvas>
+                            <ul id="fyIncomeBreakdown" class="analytics-breakdown"></ul>
+                            <p id="fyIncomeTotal" class="analytics-total"></p>
+                        </div>
+                        <div class="analytics-chart-box">
+                            <h5>Expenditure</h5>
+                            <p id="fyExpenseEmpty" class="analytics-empty hidden">No expenditure data for selected financial year.</p>
+                            <canvas id="fyExpenseChart"></canvas>
+                            <ul id="fyExpenseBreakdown" class="analytics-breakdown"></ul>
+                            <p id="fyExpenseTotal" class="analytics-total"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="userManagementPanel" class="card hidden">
+            <div class="section-header">
+                <h3 id="userManagementTitle">User Management</h3>
+                <button id="createUserBtn" class="btn btn-primary" type="button">Create User</button>
+            </div>
+            <div class="table-wrap">
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
         </section>
     </main>

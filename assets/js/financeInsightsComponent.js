@@ -1,0 +1,245 @@
+class FinanceInsightsComponent {
+    constructor(options) {
+        this.panel = options.panel;
+        this.monthInput = options.monthInput;
+        this.financialYearSelect = options.financialYearSelect;
+
+        this.chartInstances = {};
+        this.chartColors = [
+            "#303f9f", "#1976d2", "#2e7d32", "#00838f", "#7b1fa2", "#ef6c00",
+            "#6d4c41", "#546e7a", "#5e35b1", "#00897b", "#3949ab", "#c62828"
+        ];
+    }
+
+    init(onFilterChange) {
+        if (this.monthInput) {
+            this.monthInput.addEventListener("change", onFilterChange);
+        }
+        if (this.financialYearSelect) {
+            this.financialYearSelect.addEventListener("change", onFilterChange);
+        }
+    }
+
+    show() {
+        this.panel.classList.remove("hidden");
+    }
+
+    hide() {
+        this.panel.classList.add("hidden");
+    }
+
+    isVisible() {
+        return !this.panel.classList.contains("hidden");
+    }
+
+    render(entries) {
+        this.setDefaultAnalyticsMonth();
+        this.populateFinancialYearOptions(entries);
+
+        const selectedMonth = this.monthInput.value;
+        const selectedFyStart = Number(this.financialYearSelect.value);
+
+        const monthFilter = (dateValue) =>
+            typeof dateValue === "string" && dateValue.startsWith(`${selectedMonth}-`);
+        const fyFilter = (dateValue) => this.getFinancialYearStart(dateValue) === selectedFyStart;
+
+        const monthlyIncome = this.aggregateByAccountHead(entries, "Income", monthFilter);
+        const monthlyExpense = this.aggregateByAccountHead(entries, "Expenditure", monthFilter);
+        const fyIncome = this.aggregateByAccountHead(entries, "Income", fyFilter);
+        const fyExpense = this.aggregateByAccountHead(entries, "Expenditure", fyFilter);
+
+        this.renderPieChart("monthlyIncomeChart", "monthlyIncomeEmpty", "monthlyIncomeBreakdown", "monthlyIncomeTotal", monthlyIncome, "Income by Account Head", "Total Income");
+        this.renderPieChart("monthlyExpenseChart", "monthlyExpenseEmpty", "monthlyExpenseBreakdown", "monthlyExpenseTotal", monthlyExpense, "Expenditure by Account Head", "Total Expenditure");
+        this.renderPieChart("fyIncomeChart", "fyIncomeEmpty", "fyIncomeBreakdown", "fyIncomeTotal", fyIncome, "Income by Account Head", "Total Income");
+        this.renderPieChart("fyExpenseChart", "fyExpenseEmpty", "fyExpenseBreakdown", "fyExpenseTotal", fyExpense, "Expenditure by Account Head", "Total Expenditure");
+    }
+
+    setDefaultAnalyticsMonth() {
+        if (!this.monthInput.value) {
+            this.monthInput.value = new Date().toISOString().slice(0, 7);
+        }
+    }
+
+    getFinancialYearStart(dateValue) {
+        const parsed = new Date(`${dateValue}T00:00:00`);
+        if (Number.isNaN(parsed.getTime())) {
+            return null;
+        }
+        const year = parsed.getFullYear();
+        const month = parsed.getMonth();
+        return month >= 3 ? year : year - 1;
+    }
+
+    getFinancialYearLabel(startYear) {
+        const shortEnd = String((startYear + 1) % 100).padStart(2, "0");
+        return `FY ${startYear}-${shortEnd}`;
+    }
+
+    aggregateByAccountHead(entries, entryType, dateFilterFn) {
+        const totals = {};
+        entries.forEach((entry) => {
+            if (entry.type !== entryType) {
+                return;
+            }
+            if (!dateFilterFn(entry.date)) {
+                return;
+            }
+            const head = entry.account_head || "Other";
+            const amount = Number.parseFloat(entry.amount);
+            if (!Number.isFinite(amount)) {
+                return;
+            }
+            totals[head] = (totals[head] || 0) + amount;
+        });
+        return totals;
+    }
+
+    setChartVisibility(chartId, emptyId, hasData) {
+        const canvas = document.getElementById(chartId);
+        const emptyState = document.getElementById(emptyId);
+        if (!canvas || !emptyState) {
+            return;
+        }
+        canvas.classList.toggle("hidden", !hasData);
+        emptyState.classList.toggle("hidden", hasData);
+    }
+
+    formatCurrency(amount) {
+        return new Intl.NumberFormat("en-IN", {
+            style: "currency",
+            currency: "INR",
+            maximumFractionDigits: 2
+        }).format(amount);
+    }
+
+    renderBreakdown(breakdownId, totalId, labels, values, totalLabel) {
+        const breakdownList = document.getElementById(breakdownId);
+        const totalElement = document.getElementById(totalId);
+        if (!breakdownList || !totalElement) {
+            return;
+        }
+
+        breakdownList.innerHTML = "";
+        if (labels.length === 0) {
+            totalElement.textContent = `${totalLabel}: ${this.formatCurrency(0)}`;
+            return;
+        }
+
+        labels.forEach((label, index) => {
+            const item = document.createElement("li");
+            const value = values[index];
+            item.innerHTML = `<span>${label}</span><strong>${this.formatCurrency(value)}</strong>`;
+            breakdownList.appendChild(item);
+        });
+
+        const total = values.reduce((sum, value) => sum + value, 0);
+        totalElement.textContent = `${totalLabel}: ${this.formatCurrency(total)}`;
+    }
+
+    renderPieChart(chartId, emptyId, breakdownId, totalId, totalsMap, heading, totalLabel) {
+        const labels = Object.keys(totalsMap);
+        const values = labels.map((label) => Number(totalsMap[label].toFixed(2)));
+        const hasData = values.length > 0;
+        this.setChartVisibility(chartId, emptyId, hasData);
+        this.renderBreakdown(breakdownId, totalId, labels, values, totalLabel);
+
+        if (this.chartInstances[chartId]) {
+            this.chartInstances[chartId].destroy();
+            this.chartInstances[chartId] = null;
+        }
+
+        if (!hasData || typeof Chart === "undefined") {
+            return;
+        }
+
+        const canvas = document.getElementById(chartId);
+        this.chartInstances[chartId] = new Chart(canvas, {
+            type: "pie",
+            data: {
+                labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: labels.map((_, index) => this.chartColors[index % this.chartColors.length])
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1,
+                layout: {
+                    padding: 8
+                },
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            font: {
+                                size: 12
+                            },
+                            boxWidth: 14,
+                            boxHeight: 14,
+                            padding: 12
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const value = Number(context.parsed || 0);
+                                return `${context.label}: ${this.formatCurrency(value)}`;
+                            }
+                        },
+                        titleFont: {
+                            size: 13
+                        },
+                        bodyFont: {
+                            size: 12
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: heading,
+                        font: {
+                            size: 14,
+                            weight: "600"
+                        },
+                        padding: {
+                            bottom: 10
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    populateFinancialYearOptions(entries) {
+        const selected = this.financialYearSelect.value;
+        const years = new Set();
+        entries.forEach((entry) => {
+            const fyStart = this.getFinancialYearStart(entry.date);
+            if (fyStart !== null) {
+                years.add(fyStart);
+            }
+        });
+
+        const now = new Date();
+        const currentFyStart = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+        years.add(currentFyStart);
+
+        const sortedYears = Array.from(years).sort((a, b) => b - a);
+        this.financialYearSelect.innerHTML = "";
+        sortedYears.forEach((startYear) => {
+            const option = document.createElement("option");
+            option.value = String(startYear);
+            option.textContent = this.getFinancialYearLabel(startYear);
+            this.financialYearSelect.appendChild(option);
+        });
+
+        if (selected && sortedYears.includes(Number(selected))) {
+            this.financialYearSelect.value = selected;
+            return;
+        }
+        this.financialYearSelect.value = String(currentFyStart);
+    }
+}
+
+window.FinanceInsightsComponent = FinanceInsightsComponent;
