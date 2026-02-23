@@ -267,7 +267,7 @@ body {
     height: var(--common-header-height);
     z-index: 1000;
     padding: 8px 8px;
-    background: linear-gradient(115deg, #0f2a73 0%, #0f2a73 52%, #0f2a73 100%);
+    background: #002a9d;
     border-bottom: 1px solid rgba(175, 197, 255, 0.42);
     box-shadow: 0 8px 22px rgba(12, 30, 86, 0.3);
     backdrop-filter: blur(8px);
