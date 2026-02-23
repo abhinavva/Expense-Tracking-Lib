@@ -810,6 +810,48 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function isMobile() {
+        return window.matchMedia("(max-width: 768px)").matches ||
+            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    function isPathRelatedError(msg) {
+        const s = String(msg || "").toLowerCase();
+        return /path|writable|accessible|directory|could not create/i.test(s);
+    }
+
+    async function downloadBackup(deleteAfterBackup, hasDateRange, fromDate, toDate) {
+        const response = await apiFetch("api/download_backup.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                delete_after_backup: deleteAfterBackup,
+                from_date: hasDateRange ? fromDate : "",
+                to_date: hasDateRange ? toDate : ""
+            })
+        });
+        const contentType = response.headers.get("Content-Type") || "";
+        if (!response.ok || contentType.includes("application/json")) {
+            const payload = await response.json().catch(() => ({}));
+            throw new Error(payload.message || "Download failed.");
+        }
+        const blob = await response.blob();
+        const contentDisp = response.headers.get("Content-Disposition");
+        let filename = "backup_" + (hasDateRange ? `${fromDate}_to_${toDate}_` : "all_") + new Date().toISOString().slice(0, 10) + ".zip";
+        if (contentDisp) {
+            const m = contentDisp.match(/filename="?([^";\n]+)"?/);
+            if (m) filename = m[1].trim();
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
     async function createBackup(deleteAfterBackup) {
         if (!isAdministrator()) {
             Swal.fire("Not allowed", "Only administrators can run backup.", "warning");
@@ -844,6 +886,31 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
+        const useDownload = isMobile();
+        const period = hasDateRange ? `${fromDate} to ${toDate}` : "All dates";
+
+        if (useDownload) {
+            try {
+                await downloadBackup(deleteAfterBackup, hasDateRange, fromDate, toDate);
+                backupStatusText.textContent = `Latest backup: downloaded to device (${period})`;
+                if (deleteAfterBackup) {
+                    entriesCache = null;
+                    currentEntriesPage = 1;
+                    await loadEntriesFromDB(true);
+                    if (financeInsights.isVisible()) {
+                        await loadAnalyticsData();
+                    }
+                    await Swal.fire("Backup completed", `Backup downloaded to your device. Deleted backed-up entries (${period}).`, "success");
+                } else {
+                    await Swal.fire("Backup completed", `Backup downloaded to your device (${period}).`, "success");
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire("Backup failed", error.message || "Could not download backup.", "error");
+            }
+            return;
+        }
+
         try {
             const response = await apiFetch("api/create_backup.php", {
                 method: "POST",
@@ -862,7 +929,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const backupPath = String(payload.backup_path || "");
             const deletedEntries = Number(payload.deleted_entries || 0);
-            const period = String(payload.backup_period_label || (hasDateRange ? `${fromDate} to ${toDate}` : "All dates"));
             backupStatusText.textContent = `Latest backup: ${backupPath} (${period})`;
 
             if (deleteAfterBackup) {
@@ -878,6 +944,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await Swal.fire("Backup completed", `Backup created at ${backupPath} (${period}).`, "success");
         } catch (error) {
+            if (isPathRelatedError(error.message)) {
+                try {
+                    await downloadBackup(deleteAfterBackup, hasDateRange, fromDate, toDate);
+                    backupStatusText.textContent = `Latest backup: downloaded to device (${period})`;
+                    if (deleteAfterBackup) {
+                        entriesCache = null;
+                        currentEntriesPage = 1;
+                        await loadEntriesFromDB(true);
+                        if (financeInsights.isVisible()) {
+                            await loadAnalyticsData();
+                        }
+                        await Swal.fire("Backup completed", `Backup path unavailable. Backup downloaded to your device (${period}).`, "success");
+                    } else {
+                        await Swal.fire("Backup completed", `Backup path unavailable. Backup downloaded to your device (${period}).`, "success");
+                    }
+                    return;
+                } catch (downloadErr) {
+                    console.error(downloadErr);
+                    Swal.fire("Backup failed", downloadErr.message || "Could not download backup.", "error");
+                    return;
+                }
+            }
             console.error(error);
             Swal.fire("Backup failed", error.message || "Could not create backup.", "error");
         }
