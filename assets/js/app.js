@@ -111,10 +111,10 @@ document.addEventListener("DOMContentLoaded", () => {
             entryCard.classList.add("hidden");
             userManagementPanel.classList.add("hidden");
             financeInsights.hide();
-            homeBtn.classList.add("hidden");
+            homeBtn.classList.remove("hidden");
             openUserManagementBtn.classList.add("hidden");
             dataPanel.classList.remove("hidden");
-            setActiveSidebarItem(null);
+            setActiveSidebarItem(homeBtn);
             loadEntriesFromDB();
             return;
         }
@@ -150,6 +150,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function showHomeSection() {
         if (!isAdministrator()) {
+            financeInsights.hide();
+            userManagementPanel.classList.add("hidden");
+            entryCard.classList.add("hidden");
+            dataPanel.classList.remove("hidden");
+            setActiveSidebarItem(homeBtn);
+            loadEntriesFromDB();
             return;
         }
 
