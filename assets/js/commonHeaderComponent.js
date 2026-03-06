@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
     const THEME_STORAGE_KEY = "expense_tracker_theme";
     const THEME_DARK = "dark";
     const THEME_LIGHT = "light";
@@ -54,6 +54,18 @@
     function renderCommonHeader(hostElement) {
         const isAuthPage = document.body.classList.contains("auth-page");
         const eyebrowText = isAuthPage ? "Secure Access Portal" : "Library Finance Workspace";
+        const actionButtons = isAuthPage
+            ? ""
+            : `
+                <div class="common-header-actions" aria-label="Application actions">
+                    <button id="headerUserBtn" class="header-icon-btn" type="button" aria-label="User details" title="User details">
+                        <img class="header-icon-image" src="assets/icons/user.png" alt="" loading="lazy">
+                    </button>
+                    <button id="headerAboutBtn" class="header-icon-btn" type="button" aria-label="About application" title="About application">
+                        <span class="header-icon-glyph" aria-hidden="true">i</span>
+                    </button>
+                </div>
+            `;
 
         hostElement.innerHTML = `
             <header class="app-header common-app-header">
@@ -66,11 +78,12 @@
                         <p class="common-eyebrow">${eyebrowText}</p>
                         <h1 class="common-title-main">Expenditure Tracker</h1>
                     </div>
-                    <div class="common-header-meta" aria-label="Theme controls">
+                    <div class="common-header-meta" aria-label="Header controls">
                         <button class="theme-toggle-btn" type="button" aria-pressed="false">
                             <span class="theme-toggle-knob" aria-hidden="true"></span>
                             <span class="theme-toggle-text">Dark Theme</span>
                         </button>
+                        ${actionButtons}
                     </div>
                 </div>
             </header>

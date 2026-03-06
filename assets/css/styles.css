@@ -3015,3 +3015,838 @@ textarea::placeholder,
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     font-weight: 600;
 }
+
+/* Header compact mode (40px) + color sync with sidebar */
+:root {
+    --common-header-height: 40px;
+}
+
+[data-common-header] {
+    height: var(--common-header-height);
+    padding: 2px 10px;
+    background: linear-gradient(160deg, rgba(13, 27, 46, 0.78) 0%, rgba(9, 18, 34, 0.62) 100%) !important;
+    border-bottom: 1px solid rgba(170, 214, 245, 0.24);
+    box-shadow: 0 8px 18px rgba(6, 18, 33, 0.26);
+}
+
+[data-common-header]::before,
+[data-common-header]::after {
+    background: none !important;
+}
+
+.common-header-inner {
+    min-height: 34px;
+    gap: 8px;
+}
+
+.common-brand-seal {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+}
+
+.common-brand-icon {
+    width: 13px;
+    height: 13px;
+}
+
+.common-eyebrow {
+    display: none;
+}
+
+.common-title-main {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.1;
+}
+
+.theme-toggle-btn {
+    min-height: 24px;
+    min-width: 108px;
+    padding: 2px 8px 2px 30px;
+}
+
+.theme-toggle-knob {
+    left: 6px;
+    width: 12px;
+    height: 12px;
+}
+
+.theme-toggle-text {
+    font-size: 0.62rem;
+}
+
+:root[data-theme="light"] [data-common-header] {
+    background: linear-gradient(145deg, rgba(229, 241, 252, 0.74) 0%, rgba(209, 226, 244, 0.68) 100%) !important;
+    border-bottom: 1px solid rgba(103, 146, 190, 0.26);
+}
+
+:root[data-theme="light"] [data-common-header]::before,
+:root[data-theme="light"] [data-common-header]::after {
+    background: none !important;
+}
+
+:root[data-theme="light"] .common-title-main {
+    color: #244c76;
+    text-shadow: none;
+}
+
+/* Header action icons: About + User */
+.common-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 6px;
+}
+
+.header-icon-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    border: 1px solid rgba(173, 216, 245, 0.34);
+    background: linear-gradient(145deg, rgba(24, 45, 72, 0.66), rgba(13, 27, 46, 0.54));
+    color: #dff0ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 5px 12px rgba(3, 10, 21, 0.28);
+    backdrop-filter: blur(10px) saturate(145%);
+    -webkit-backdrop-filter: blur(10px) saturate(145%);
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.header-icon-btn:hover {
+    transform: translateY(-1px);
+    border-color: rgba(200, 232, 255, 0.5);
+}
+
+.header-icon-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(118, 192, 251, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.header-icon-glyph {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 800;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1;
+    text-transform: lowercase;
+}
+
+.header-icon-image {
+    width: 12px;
+    height: 12px;
+    display: block;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+:root[data-theme="light"] .header-icon-btn {
+    background: linear-gradient(145deg, rgba(233, 245, 255, 0.9), rgba(206, 226, 245, 0.76));
+    border-color: rgba(112, 154, 194, 0.42);
+    color: #244c76;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 5px 12px rgba(84, 118, 154, 0.24);
+}
+
+:root[data-theme="light"] .header-icon-image {
+    filter: brightness(0) saturate(100%) invert(23%) sepia(24%) saturate(1456%) hue-rotate(172deg) brightness(97%) contrast(95%);
+}
+
+@media (max-width: 820px) {
+    .common-header-actions {
+        gap: 4px;
+        margin-right: 4px;
+    }
+
+    .header-icon-btn {
+        width: 22px;
+        height: 22px;
+    }
+
+    .header-icon-glyph {
+        font-size: 0.74rem;
+    }
+}
+
+/* Theme toggle text visibility fix (light mode) */
+.theme-toggle-btn {
+    min-width: 116px;
+    padding-left: 34px;
+}
+
+.theme-toggle-text {
+    position: relative;
+    z-index: 1;
+}
+
+:root[data-theme="light"] .theme-toggle-btn {
+    padding-left: 36px;
+}
+
+:root[data-theme="light"] .theme-toggle-knob {
+    transform: translate(8px, -50%);
+}
+
+@media (max-width: 820px) {
+    .theme-toggle-btn {
+        min-width: 108px;
+        padding-left: 32px;
+    }
+
+    :root[data-theme="light"] .theme-toggle-knob {
+        transform: translate(7px, -50%);
+    }
+}
+
+/* User details popup redesign */
+.swal-user-profile-popup {
+    width: min(460px, 92vw) !important;
+    border-radius: 18px !important;
+    padding: 18px 18px 16px !important;
+}
+
+.swal-user-profile-html {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.user-profile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+}
+
+.user-profile-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 14px;
+    background: linear-gradient(145deg, rgba(34, 66, 105, 0.52), rgba(20, 39, 66, 0.4));
+    border: 1px solid rgba(163, 206, 236, 0.24);
+}
+
+.user-profile-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    color: #f2f8ff;
+    background: linear-gradient(145deg, rgba(92, 165, 243, 0.9), rgba(52, 108, 185, 0.82));
+    border: 1px solid rgba(202, 233, 255, 0.42);
+    box-shadow: 0 6px 16px rgba(8, 21, 40, 0.36);
+}
+
+.user-profile-meta {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.user-profile-title {
+    margin: 0;
+    font-size: 1.04rem;
+    line-height: 1.2;
+    color: #eaf5ff;
+    font-weight: 700;
+}
+
+.user-profile-subtitle {
+    margin: 0;
+    font-size: 0.77rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #b7d0eb;
+    font-weight: 700;
+}
+
+.user-profile-role {
+    margin-top: 2px;
+    width: fit-content;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    color: #f4f9ff;
+    background: linear-gradient(145deg, rgba(86, 157, 233, 0.72), rgba(57, 111, 185, 0.6));
+    border: 1px solid rgba(187, 223, 253, 0.3);
+}
+
+.user-profile-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.user-profile-row {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    background: linear-gradient(145deg, rgba(18, 34, 56, 0.5), rgba(12, 24, 41, 0.38));
+    border: 1px solid rgba(157, 199, 233, 0.2);
+}
+
+.user-profile-label {
+    font-size: 0.76rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #aac5e2;
+}
+
+.user-profile-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #e8f4ff;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.user-profile-email {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.swal2-actions .swal-user-profile-close,
+.swal2-actions .swal-user-profile-logout {
+    min-width: 112px;
+    min-height: 38px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 8px 14px;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.swal2-actions .swal-user-profile-close {
+    background: linear-gradient(145deg, rgba(86, 131, 186, 0.76), rgba(55, 89, 136, 0.62));
+    border-color: rgba(177, 208, 238, 0.32);
+    color: #eff8ff;
+}
+
+.swal2-actions .swal-user-profile-logout {
+    background: linear-gradient(145deg, rgba(236, 92, 118, 0.94), rgba(191, 56, 84, 0.84));
+    border-color: rgba(255, 202, 214, 0.34);
+    color: #fff;
+}
+
+.swal2-actions .swal-user-profile-close:hover,
+.swal2-actions .swal-user-profile-logout:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+}
+
+:root[data-theme="light"] .swal-user-profile-popup {
+    background: linear-gradient(145deg, rgba(233, 245, 255, 0.97), rgba(215, 232, 248, 0.92)) !important;
+    border: 1px solid rgba(124, 163, 201, 0.42) !important;
+}
+
+:root[data-theme="light"] .user-profile-head {
+    background: linear-gradient(145deg, rgba(220, 237, 252, 0.98), rgba(200, 223, 245, 0.9));
+    border-color: rgba(122, 161, 200, 0.35);
+}
+
+:root[data-theme="light"] .user-profile-avatar {
+    color: #f8fbff;
+    background: linear-gradient(145deg, rgba(89, 156, 228, 0.92), rgba(56, 111, 184, 0.84));
+}
+
+:root[data-theme="light"] .user-profile-title {
+    color: #1f446d;
+}
+
+:root[data-theme="light"] .user-profile-subtitle,
+:root[data-theme="light"] .user-profile-label {
+    color: #537091;
+}
+
+:root[data-theme="light"] .user-profile-role {
+    color: #f7fbff;
+}
+
+:root[data-theme="light"] .user-profile-row {
+    background: linear-gradient(145deg, rgba(236, 246, 255, 0.96), rgba(218, 234, 249, 0.88));
+    border-color: rgba(130, 168, 206, 0.3);
+}
+
+:root[data-theme="light"] .user-profile-value {
+    color: #284b72;
+}
+
+:root[data-theme="light"] .swal2-actions .swal-user-profile-close {
+    background: linear-gradient(145deg, rgba(204, 223, 243, 0.98), rgba(180, 205, 231, 0.9));
+    border-color: rgba(119, 159, 198, 0.34);
+    color: #2b4e73;
+}
+
+@media (max-width: 560px) {
+    .swal-user-profile-popup {
+        width: min(96vw, 420px) !important;
+        padding: 14px 12px 12px !important;
+    }
+
+    .user-profile-head {
+        padding: 10px;
+    }
+
+    .user-profile-avatar {
+        width: 42px;
+        height: 42px;
+    }
+
+    .user-profile-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        align-items: start;
+    }
+}
+
+/* User popup alignment fixes */
+.swal-user-profile-popup .swal2-html-container {
+    width: 100% !important;
+}
+
+.swal-user-profile-popup .swal2-actions {
+    width: 100%;
+    margin: 14px auto 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.swal-user-profile-popup .swal2-actions .swal2-styled {
+    margin: 0 !important;
+}
+
+.swal-user-profile-popup .swal2-actions .swal-user-profile-close,
+.swal-user-profile-popup .swal2-actions .swal-user-profile-logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    line-height: 1;
+}
+
+.swal-user-profile-popup .swal2-actions .swal-user-profile-close:focus-visible,
+.swal-user-profile-popup .swal2-actions .swal-user-profile-logout:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(139, 195, 245, 0.34);
+}
+
+/* User popup role badge border visibility fix */
+.user-profile-head {
+    overflow: visible;
+}
+
+.user-profile-role {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.2;
+    padding: 4px 10px 5px;
+    position: relative;
+    z-index: 1;
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.28), 0 1px 0 rgba(7, 18, 34, 0.34);
+}
+
+:root[data-theme="light"] .user-profile-role {
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.5), 0 1px 0 rgba(118, 158, 196, 0.28);
+}
+
+/* User popup height +10px */
+.swal-user-profile-popup {
+    padding-bottom: 26px !important;
+}
+
+/* User popup height extra +50px */
+.swal-user-profile-popup {
+    padding-bottom: 76px !important;
+}
+
+/* User popup: increase content area height (not button area) */
+.swal-user-profile-popup {
+    padding-bottom: 16px !important;
+}
+
+.swal-user-profile-html {
+    min-height: 310px !important;
+    display: flex;
+}
+
+.swal-user-profile-html .user-profile-card {
+    width: 100%;
+    min-height: 100%;
+}
+
+@media (max-width: 560px) {
+    .swal-user-profile-html {
+        min-height: 280px !important;
+    }
+}
+
+/* User popup overall height -10px */
+.swal-user-profile-html {
+    min-height: 300px !important;
+}
+
+@media (max-width: 560px) {
+    .swal-user-profile-html {
+        min-height: 270px !important;
+    }
+}
+
+/* User popup controls redesign: top close + header logout icon */
+.swal-user-profile-popup {
+    padding-bottom: 16px !important;
+}
+
+.swal-user-profile-html {
+    min-height: 0 !important;
+    display: block;
+}
+
+.swal-user-profile-html .user-profile-card {
+    min-height: 0;
+}
+
+.user-profile-head {
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.user-profile-head-main {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.user-profile-logout-icon-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 200, 212, 0.34);
+    background: linear-gradient(145deg, rgba(232, 88, 115, 0.92), rgba(183, 53, 80, 0.84));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 12px rgba(63, 11, 24, 0.34);
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.user-profile-logout-icon-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+}
+
+.user-profile-logout-icon-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(250, 145, 167, 0.4);
+}
+
+.user-profile-logout-icon {
+    width: 14px;
+    height: 14px;
+    display: block;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+.swal-user-profile-popup .swal2-close,
+.swal-user-profile-popup .swal-user-profile-top-close {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 10px !important;
+    top: 10px !important;
+    right: 10px !important;
+    color: #e8f4ff !important;
+    background: linear-gradient(145deg, rgba(48, 79, 117, 0.76), rgba(28, 52, 84, 0.62));
+    border: 1px solid rgba(172, 212, 244, 0.28);
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.swal-user-profile-popup .swal2-close:hover,
+.swal-user-profile-popup .swal-user-profile-top-close:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+}
+
+.swal-user-profile-popup .swal2-actions {
+    display: none !important;
+}
+
+:root[data-theme="light"] .user-profile-logout-icon-btn {
+    border-color: rgba(221, 138, 157, 0.4);
+    background: linear-gradient(145deg, rgba(226, 110, 133, 0.92), rgba(183, 74, 99, 0.84));
+}
+
+:root[data-theme="light"] .swal-user-profile-popup .swal2-close,
+:root[data-theme="light"] .swal-user-profile-popup .swal-user-profile-top-close {
+    color: #254b74 !important;
+    background: linear-gradient(145deg, rgba(223, 238, 252, 0.98), rgba(196, 220, 245, 0.88));
+    border-color: rgba(124, 163, 201, 0.36);
+}
+
+@media (max-width: 560px) {
+    .user-profile-logout-icon-btn {
+        width: 28px;
+        height: 28px;
+    }
+
+    .swal-user-profile-popup .swal2-close,
+    .swal-user-profile-popup .swal-user-profile-top-close {
+        width: 28px !important;
+        height: 28px !important;
+        top: 8px !important;
+        right: 8px !important;
+    }
+}
+
+/* User popup overlap fix: top close vs logout icon */
+.user-profile-head {
+    padding-right: 52px;
+}
+
+.user-profile-logout-icon-btn {
+    margin-top: 2px;
+    margin-right: 2px;
+    z-index: 1;
+}
+
+.swal-user-profile-popup .swal2-close,
+.swal-user-profile-popup .swal-user-profile-top-close {
+    top: 8px !important;
+    right: 8px !important;
+    z-index: 4;
+}
+
+@media (max-width: 560px) {
+    .user-profile-head {
+        padding-right: 46px;
+    }
+
+    .user-profile-logout-icon-btn {
+        margin-top: 1px;
+        margin-right: 1px;
+    }
+}
+
+/* User popup final layout refinement */
+.swal-user-profile-popup {
+    padding: 28px 18px 16px !important;
+}
+
+.swal-user-profile-html {
+    min-height: 310px !important;
+    display: block !important;
+}
+
+.swal-user-profile-html .user-profile-card {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.user-profile-head {
+    align-items: center !important;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 14px !important;
+    padding-right: 14px !important;
+}
+
+.user-profile-head-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-profile-logout-icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    align-self: center;
+    margin: 0 !important;
+    flex: 0 0 auto;
+}
+
+.user-profile-logout-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.swal-user-profile-popup .swal2-close,
+.swal-user-profile-popup .swal-user-profile-top-close {
+    top: 6px !important;
+    right: 8px !important;
+    width: 30px !important;
+    height: 30px !important;
+    z-index: 6;
+}
+
+@media (max-width: 560px) {
+    .swal-user-profile-popup {
+        padding: 24px 12px 12px !important;
+    }
+
+    .swal-user-profile-html {
+        min-height: 280px !important;
+    }
+
+    .user-profile-logout-icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+    }
+
+    .user-profile-logout-icon {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+/* User popup final cleanup: smaller container + plain external close */
+.swal-user-profile-popup {
+    width: min(455px, 92vw) !important;
+}
+
+.swal-user-profile-html {
+    min-height: 305px !important;
+}
+
+.swal-user-profile-popup .user-profile-card {
+    margin-top: 10px;
+}
+
+.swal-user-profile-popup .swal2-close,
+.swal-user-profile-popup .swal-user-profile-top-close {
+    top: 2px !important;
+    right: 10px !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #d6e9ff !important;
+    font-size: 1.85rem !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+}
+
+.swal-user-profile-popup .swal2-close:hover,
+.swal-user-profile-popup .swal-user-profile-top-close:hover {
+    transform: none !important;
+    filter: none !important;
+    color: #ffffff !important;
+}
+
+:root[data-theme="light"] .swal-user-profile-popup .swal2-close,
+:root[data-theme="light"] .swal-user-profile-popup .swal-user-profile-top-close {
+    color: #355a84 !important;
+}
+
+:root[data-theme="light"] .swal-user-profile-popup .swal2-close:hover,
+:root[data-theme="light"] .swal-user-profile-popup .swal-user-profile-top-close:hover {
+    color: #183a61 !important;
+}
+
+@media (max-width: 560px) {
+    .swal-user-profile-popup {
+        width: min(95vw, 415px) !important;
+    }
+
+    .swal-user-profile-html {
+        min-height: 275px !important;
+    }
+
+    .swal-user-profile-popup .user-profile-card {
+        margin-top: 9px;
+    }
+
+    .swal-user-profile-popup .swal2-close,
+    .swal-user-profile-popup .swal-user-profile-top-close {
+        top: 1px !important;
+        right: 8px !important;
+        font-size: 1.72rem !important;
+    }
+}
+
+/* User popup: remove internal scrollbar */
+.swal-user-profile-popup {
+    overflow: visible !important;
+    scrollbar-width: none !important;
+}
+
+.swal-user-profile-popup .swal2-html-container {
+    overflow: visible !important;
+    max-height: none !important;
+    scrollbar-width: none !important;
+}
+
+.swal-user-profile-popup::-webkit-scrollbar,
+.swal-user-profile-popup .swal2-html-container::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+}
+
+/* User popup: place close button at the extreme top-right corner */
+.swal-user-profile-popup .swal2-close,
+.swal-user-profile-popup .swal-user-profile-top-close {
+    top: 0 !important;
+    right: 0 !important;
+    margin: 0 !important;
+    z-index: 10 !important;
+}
+
+/* User popup: compact vertical spacing */
+.swal-user-profile-popup {
+    padding: 10px 14px 12px !important;
+}
+
+.swal-user-profile-html {
+    min-height: 0 !important;
+    height: auto !important;
+    display: block !important;
+}
+
+.swal-user-profile-popup .swal2-html-container {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.swal-user-profile-popup .user-profile-card {
+    margin-top: 14px !important;
+    gap: 10px !important;
+}
+
+@media (max-width: 560px) {
+    .swal-user-profile-popup {
+        padding: 8px 10px 10px !important;
+    }
+
+    .swal-user-profile-popup .user-profile-card {
+        margin-top: 12px !important;
+    }
+}

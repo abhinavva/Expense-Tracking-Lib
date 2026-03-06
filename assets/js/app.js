@@ -6,7 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const homeBtn = document.getElementById("homeBtn");
     const analyticsBtn = document.getElementById("analyticsBtn");
     const backupBtn = document.getElementById("backupBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
+    const headerUserBtn = document.getElementById("headerUserBtn");
+    const headerAboutBtn = document.getElementById("headerAboutBtn");
     const dataPanel = document.getElementById("dataPanel");
     const analyticsPanel = document.getElementById("analyticsPanel");
     const analyticsMonthlyTabBtn = document.getElementById("analyticsMonthlyTabBtn");
@@ -68,6 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentUserName = document.getElementById("currentUserName");
     const currentUserRole = document.getElementById("currentUserRole");
 
+    const APP_VERSION = "1.0.0";
     let loggedInUser = null;
     let entriesCache = null;
     let currentEntriesPage = 1;
@@ -1040,6 +1042,102 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    async function showUserDetailsPopup() {
+        if (!loggedInUser) {
+            return;
+        }
+
+        const nameRaw = String(loggedInUser.full_name || "").trim();
+        const nameText = escapeHtml(nameRaw || "-");
+        const emailText = escapeHtml(loggedInUser.email || "-");
+        const roleRaw = normalizeRole(loggedInUser.role || "user");
+        const roleText = escapeHtml(String(roleRaw).replace(/[_-]+/g, " ").replace(/\b\w/g, (match) => match.toUpperCase()));
+        const initials = escapeHtml(
+            (nameRaw || "User")
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((part) => part[0].toUpperCase())
+                .join("") || "U"
+        );
+
+        await Swal.fire({
+            title: "",
+            html: `
+                <section class="user-profile-card" aria-label="User details">
+                    <header class="user-profile-head">
+                        <div class="user-profile-head-main">
+                            <div class="user-profile-avatar" aria-hidden="true">${initials}</div>
+                            <div class="user-profile-meta">
+                                <h3 class="user-profile-title">${nameText}</h3>
+                                <p class="user-profile-subtitle">Account Overview</p>
+                                <span class="user-profile-role">${roleText}</span>
+                            </div>
+                        </div>
+                        <button type="button" class="user-profile-logout-icon-btn" aria-label="Logout" title="Logout">
+                            <img class="user-profile-logout-icon" src="assets/icons/logout.png" alt="" loading="lazy">
+                        </button>
+                    </header>
+                    <div class="user-profile-grid">
+                        <div class="user-profile-row">
+                            <span class="user-profile-label">Name</span>
+                            <span class="user-profile-value">${nameText}</span>
+                        </div>
+                        <div class="user-profile-row">
+                            <span class="user-profile-label">Email</span>
+                            <span class="user-profile-value user-profile-email">${emailText}</span>
+                        </div>
+                        <div class="user-profile-row">
+                            <span class="user-profile-label">Role</span>
+                            <span class="user-profile-value">${roleText}</span>
+                        </div>
+                    </div>
+                </section>
+            `,
+            showConfirmButton: false,
+            showDenyButton: false,
+            showCancelButton: false,
+            showCloseButton: true,
+            customClass: {
+                popup: "swal-user-profile-popup",
+                htmlContainer: "swal-user-profile-html",
+                closeButton: "swal-user-profile-top-close"
+            },
+            didOpen: (popup) => {
+                const logoutIconBtn = popup.querySelector(".user-profile-logout-icon-btn");
+                if (logoutIconBtn) {
+                    logoutIconBtn.addEventListener("click", async () => {
+                        Swal.close();
+                        await logout();
+                    });
+                }
+            }
+        });
+    }
+
+    async function showAboutPopup() {
+        await Swal.fire({
+            title: "About Expenditure Tracker",
+            icon: "info",
+            confirmButtonText: "Close",
+            html: `
+                <div style="text-align:left; line-height:1.55;">
+                    <p><strong>Application:</strong> Library Expenditure Tracker</p>
+                    <p><strong>Version:</strong> v${APP_VERSION}</p>
+                    <p>Manage income, expenditure, insights, backup, import/export, and Tally XML from one workspace.</p>
+                </div>
+            `
+        });
+    }
     async function logout() {
         try {
             await apiFetch("api/auth/logout.php", { method: "POST" });
@@ -1174,10 +1272,12 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault();
         await showAnalyticsSection();
     });
-    logoutBtn.addEventListener("click", (event) => {
-        event.preventDefault();
-        logout();
-    });
+    if (headerUserBtn) {
+        headerUserBtn.addEventListener("click", showUserDetailsPopup);
+    }
+    if (headerAboutBtn) {
+        headerAboutBtn.addEventListener("click", showAboutPopup);
+    }
     openUserManagementBtn.addEventListener("click", (event) => {
         event.preventDefault();
         showUserManagementSection();
@@ -1247,4 +1347,5 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.href = "login.html";
         });
 });
+
 
