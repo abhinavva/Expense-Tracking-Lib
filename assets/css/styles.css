@@ -2996,3 +2996,22 @@ textarea::placeholder,
     color: #2d4e72 !important;
     border: 1px solid rgba(126, 165, 202, 0.4) !important;
 }
+
+/* Import section typography recovery (light + dark) */
+:root[data-theme="light"] .backup-columns-grid code,
+:root[data-theme="light"] .backup-note code {
+    background: linear-gradient(145deg, rgba(226, 239, 252, 0.95), rgba(209, 227, 246, 0.88));
+    border: 1px solid rgba(116, 155, 196, 0.44);
+    color: #2b4f76;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+:root[data-theme="dark"] .backup-columns-grid code,
+:root[data-theme="dark"] .backup-note code {
+    color: #eaf5ff;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 600;
+}
