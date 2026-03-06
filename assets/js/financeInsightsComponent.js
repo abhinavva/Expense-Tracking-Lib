@@ -262,6 +262,8 @@ class FinanceInsightsComponent {
         const labels = Object.keys(totalsMap);
         const values = labels.map((label) => Number(totalsMap[label].toFixed(2)));
         const hasData = values.length > 0;
+        const rootStyles = getComputedStyle(document.documentElement);
+        const chartTextColor = rootStyles.getPropertyValue("--text").trim() || "#e5ebf8";
         this.setChartVisibility(chartId, emptyId, hasData);
         this.renderBreakdown(breakdownId, totalId, labels, values, totalLabel);
 
@@ -288,6 +290,7 @@ class FinanceInsightsComponent {
                 responsive: true,
                 maintainAspectRatio: true,
                 aspectRatio: 1,
+                color: chartTextColor,
                 layout: {
                     padding: 8
                 },
@@ -295,6 +298,7 @@ class FinanceInsightsComponent {
                     legend: {
                         position: "bottom",
                         labels: {
+                            color: chartTextColor,
                             font: {
                                 size: 12
                             },
@@ -304,6 +308,11 @@ class FinanceInsightsComponent {
                         }
                     },
                     tooltip: {
+                        backgroundColor: "#0f1728",
+                        titleColor: "#f3f7ff",
+                        bodyColor: "#dbe6ff",
+                        borderColor: "#32496f",
+                        borderWidth: 1,
                         callbacks: {
                             label: (context) => {
                                 const value = Number(context.parsed || 0);
@@ -320,6 +329,7 @@ class FinanceInsightsComponent {
                     title: {
                         display: true,
                         text: heading,
+                        color: chartTextColor,
                         font: {
                             size: 14,
                             weight: "600"
@@ -400,3 +410,4 @@ class FinanceInsightsComponent {
 }
 
 window.FinanceInsightsComponent = FinanceInsightsComponent;
+

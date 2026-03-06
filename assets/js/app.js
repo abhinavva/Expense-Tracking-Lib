@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const userManagementPanel = document.getElementById("userManagementPanel");
     const backupPanel = document.getElementById("backupPanel");
     const backupOnlyBtn = document.getElementById("backupOnlyBtn");
+    const exportTallyBtn = document.getElementById("exportTallyBtn");
     const backupAndDeleteBtn = document.getElementById("backupAndDeleteBtn");
     const backupRootPath = document.getElementById("backupRootPath");
     const saveBackupPathBtn = document.getElementById("saveBackupPathBtn");
@@ -852,6 +853,74 @@ document.addEventListener("DOMContentLoaded", () => {
         URL.revokeObjectURL(url);
     }
 
+    async function downloadTallyExport(hasDateRange, fromDate, toDate) {
+        const response = await apiFetch("api/export_tally.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                from_date: hasDateRange ? fromDate : "",
+                to_date: hasDateRange ? toDate : ""
+            })
+        });
+
+        const contentType = response.headers.get("Content-Type") || "";
+        if (!response.ok || contentType.includes("application/json")) {
+            const payload = await response.json().catch(() => ({}));
+            throw new Error(payload.message || "Tally export failed.");
+        }
+
+        const blob = await response.blob();
+        const contentDisp = response.headers.get("Content-Disposition");
+        let filename = "tally_export_" + (hasDateRange ? `${fromDate}_to_${toDate}_` : "all_dates_") + new Date().toISOString().slice(0, 10) + ".xml";
+        if (contentDisp) {
+            const match = contentDisp.match(/filename="?([^";\n]+)"?/);
+            if (match) {
+                filename = match[1].trim();
+            }
+        }
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    async function exportTallyData() {
+        if (!isAdministrator()) {
+            Swal.fire("Not allowed", "Only administrators can export Tally XML.", "warning");
+            return;
+        }
+
+        const selectAll = backupSelectAll.checked;
+        const fromDate = backupFromDate.value.trim();
+        const toDate = backupToDate.value.trim();
+
+        if (!selectAll && (!fromDate || !toDate)) {
+            Swal.fire("Date range required", "Please select both From and To dates, or enable 'Select all data'.", "warning");
+            return;
+        }
+
+        if (!selectAll && fromDate > toDate) {
+            Swal.fire("Invalid range", "From date cannot be later than To date.", "warning");
+            return;
+        }
+
+        const hasDateRange = !selectAll;
+        const period = hasDateRange ? `${fromDate} to ${toDate}` : "All dates";
+
+        try {
+            await downloadTallyExport(hasDateRange, fromDate, toDate);
+            backupStatusText.textContent = `Latest Tally export: downloaded (${period})`;
+            await Swal.fire("Tally export ready", `Tally XML downloaded (${period}). You can import it in Tally.`, "success");
+        } catch (error) {
+            console.error(error);
+            Swal.fire("Export failed", error.message || "Could not export Tally XML.", "error");
+        }
+    }
     async function createBackup(deleteAfterBackup) {
         if (!isAdministrator()) {
             Swal.fire("Not allowed", "Only administrators can run backup.", "warning");
@@ -1154,6 +1223,7 @@ document.addEventListener("DOMContentLoaded", () => {
     backupSelectAll.addEventListener("change", toggleBackupDateInputs);
     saveBackupPathBtn.addEventListener("click", saveBackupPath);
     backupOnlyBtn.addEventListener("click", () => createBackup(false));
+    exportTallyBtn.addEventListener("click", exportTallyData);
     backupAndDeleteBtn.addEventListener("click", () => createBackup(true));
     importBackupBtn.addEventListener("click", importBackupData);
     financeInsights.init(async () => {
@@ -1177,3 +1247,4 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.href = "login.html";
         });
 });
+
