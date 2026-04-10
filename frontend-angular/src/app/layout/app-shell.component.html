@@ -1,0 +1,95 @@
+<div class="ledger-shell">
+  <!-- Sidebar -->
+  <aside class="ledger-sidebar">
+    <div class="brand-wrap">
+      <div class="brand-icon">
+        <span class="material-symbols-outlined">architecture</span>
+      </div>
+      <div>
+        <div class="brand-title">Architectural Ledger</div>
+        <div class="brand-subtitle">Precision Atelier</div>
+      </div>
+    </div>
+
+    <nav class="side-nav">
+      <a
+        *ngFor="let item of visibleNavItems()"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        class="side-link"
+      >
+        <span class="material-symbols-outlined" [attr.data-icon]="item.icon">{{ item.icon }}</span>
+        <span class="link-label">{{ item.label }}</span>
+      </a>
+    </nav>
+
+    <button class="add-transaction-btn" [routerLink]="'/dashboard'">
+      <span class="material-symbols-outlined">add</span>
+      Add Transaction
+    </button>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="ledger-main">
+    <!-- Top Navigation Bar -->
+    <header class="ledger-topbar">
+      <div class="topbar-left">
+        <h1 class="topbar-title">The Ledger</h1>
+        <div class="search-wrap">
+          <span class="material-symbols-outlined search-icon">search</span>
+          <input type="text" placeholder="Search records..." />
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="icon-btn" type="button" aria-label="Notifications">
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="notification-dot"></span>
+        </button>
+        <button class="icon-btn" type="button" aria-label="Settings">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+
+        <div class="topbar-divider"></div>
+
+        <div class="user-wrap" (mouseleave)="closeUserMenu()">
+          <button class="user-trigger" type="button" (click)="toggleUserMenu()">
+            <div class="user-meta" *ngIf="user() as u">
+              <p class="name">{{ u.full_name }}</p>
+              <p class="role">{{ u.role }}</p>
+            </div>
+            <div class="avatar">{{ initials(user()?.full_name) }}</div>
+          </button>
+
+          <div class="user-menu" *ngIf="userMenuOpen() && user() as u">
+            <p class="menu-name">{{ u.full_name }}</p>
+            <p class="menu-email">{{ u.email }}</p>
+            <button type="button" (click)="logout()">
+              <span class="material-symbols-outlined">logout</span>
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Canvas Area -->
+    <main class="ledger-canvas">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
+
+<!-- Mobile Bottom Navigation -->
+<nav class="mobile-nav">
+  <a
+    *ngFor="let item of visibleNavItems()"
+    [routerLink]="item.route"
+    routerLinkActive="active"
+    class="mobile-link"
+  >
+    <span class="material-symbols-outlined">{{ item.icon }}</span>
+    <span>{{ item.label }}</span>
+  </a>
+</nav>
+

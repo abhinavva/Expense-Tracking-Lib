@@ -1,0 +1,165 @@
+<section class="backup-page">
+  <!-- ─── Page Header ─── -->
+  <header class="page-header">
+    <div>
+      <h2>Vault &amp; Protocol</h2>
+      <p>Ensure institutional continuity through encrypted data backups and seamless ledger synchronization.</p>
+    </div>
+  </header>
+
+  <p class="status-msg" *ngIf="status()">
+    <span class="material-symbols-outlined">check_circle</span> {{ status() }}
+  </p>
+  <p class="error-msg" *ngIf="error()">
+    <span class="material-symbols-outlined">error</span> {{ error() }}
+  </p>
+
+  <!-- ─── Bento Grid: Create Backup + Import ─── -->
+  <div class="bento-grid">
+    <!-- Create Backup Card -->
+    <section class="card backup-card">
+      <div class="card-head">
+        <div class="icon-wrap"><span class="material-symbols-outlined">cloud_upload</span></div>
+        <h3>Create Backup</h3>
+      </div>
+
+      <label class="field-label">
+        Target Directory
+        <div class="inline-group">
+          <input type="text" [ngModel]="backupPath()" (ngModelChange)="backupPath.set($event)" placeholder="C:/fin_backup" />
+          <button type="button" class="btn-subtle" (click)="saveBackupPath()" [disabled]="loading()">
+            <span class="material-symbols-outlined">save</span> Save
+          </button>
+        </div>
+      </label>
+
+      <label class="toggle-line">
+        <input type="checkbox" [ngModel]="selectAll()" (ngModelChange)="selectAll.set($event)" />
+        Select all data
+      </label>
+
+      <div class="date-grid">
+        <label class="field-label">
+          Date From
+          <input type="date" [disabled]="selectAll()" [ngModel]="fromDate()" (ngModelChange)="fromDate.set($event)" />
+        </label>
+        <label class="field-label">
+          Date To
+          <input type="date" [disabled]="selectAll()" [ngModel]="toDate()" (ngModelChange)="toDate.set($event)" />
+        </label>
+      </div>
+
+      <div class="stack-actions">
+        <button type="button" class="btn-primary" (click)="runBackup(false)" [disabled]="loading()">
+          <span class="material-symbols-outlined">backup</span> Backup Data
+        </button>
+        <button type="button" class="btn-subtle" (click)="downloadBackup()" [disabled]="loading()">
+          <span class="material-symbols-outlined">download</span> Download Backup ZIP
+        </button>
+        <button type="button" class="btn-subtle" (click)="exportTally()" [disabled]="loading()">
+          <span class="material-symbols-outlined">receipt_long</span> Export for Tally
+        </button>
+        <button type="button" class="btn-danger" (click)="runBackup(true)" [disabled]="loading()">
+          <span class="material-symbols-outlined">delete_sweep</span> Backup &amp; Delete Backed-up Data
+        </button>
+      </div>
+
+      <article class="integrity-chip">
+        <span class="material-symbols-outlined">verified_user</span>
+        <div>
+          <h4>Last Integrity Check</h4>
+          <p>Success: protocol layer active and backups writable.</p>
+        </div>
+      </article>
+    </section>
+
+    <!-- Import Card -->
+    <section class="card import-card">
+      <div class="card-head">
+        <div class="icon-wrap accent"><span class="material-symbols-outlined">publish</span></div>
+        <h3>Import from File</h3>
+      </div>
+
+      <label class="dropzone">
+        <input type="file" accept=".csv,.xlsx,.xls" (change)="onFileSelected($event)" />
+        <div class="drop-inner">
+          <span class="material-symbols-outlined drop-icon">upload_file</span>
+          <strong>Upload Expenditure Ledger</strong>
+          <small>Drag and drop your spreadsheet here or click to browse</small>
+          <div class="ext-tags"><span>.csv</span><span>.xlsx</span><span>.xls</span></div>
+        </div>
+      </label>
+
+      <div class="mapping" *ngIf="detectedColumns().length > 0">
+        <div class="mapping-head">
+          <h4>Mapping Preview</h4>
+          <span class="col-badge">{{ detectedColumns().length }} Columns Detected</span>
+        </div>
+        <div class="mapping-grid">
+          <article *ngFor="let col of detectedColumns().slice(0, 8)">
+            <p class="map-label">Source</p>
+            <strong>{{ col }}</strong>
+            <span class="material-symbols-outlined map-arrow">south</span>
+            <p class="map-label">Target</p>
+            <strong class="target">auto-mapped</strong>
+          </article>
+        </div>
+      </div>
+
+      <button type="button" class="btn-primary full" (click)="importData()" [disabled]="loading() || importRows().length === 0">
+        <span class="material-symbols-outlined">sync</span> Initiate Ledger Synchronisation
+      </button>
+
+      <p class="file-copy" *ngIf="selectedFile() as file">
+        <span class="material-symbols-outlined">description</span>
+        Loaded: {{ file.name }} ({{ importRows().length }} valid rows)
+      </p>
+      <p class="file-copy" *ngIf="!selectedFile()">No file selected.</p>
+    </section>
+  </div>
+
+  <!-- ─── Operation Log ─── -->
+  <section class="card operations-card">
+    <div class="operations-head">
+      <div>
+        <h3>Operation Log</h3>
+        <p>Recent synchronization and archival events</p>
+      </div>
+      <button type="button" class="btn-ghost">
+        <span class="material-symbols-outlined">history</span> View Full Archive
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Protocol Type</th>
+            <th>Source / Target</th>
+            <th>Date Stamp</th>
+            <th>Payload Size</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of operationLogs()">
+            <td>
+              <span class="protocol-cell">
+                <span class="material-symbols-outlined">terminal</span>
+                {{ row.protocol }}
+              </span>
+            </td>
+            <td>{{ row.source }}</td>
+            <td>{{ row.timestamp }}</td>
+            <td>{{ row.payload }}</td>
+            <td>
+              <span class="status-tag" [class.archived]="row.status === 'ARCHIVED'" [class.failed]="row.status === 'FAILED'">
+                {{ row.status }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

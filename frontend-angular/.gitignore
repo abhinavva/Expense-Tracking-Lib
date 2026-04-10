@@ -1,0 +1,8 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files
+/node_modules
+/dist
+/.angular
+.coverage
+.DS_Store
+npm-debug.log
+package-lock.json

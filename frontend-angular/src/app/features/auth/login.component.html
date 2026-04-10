@@ -1,0 +1,37 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <div class="brand">
+      <div class="brand-icon"><span class="material-symbols-outlined">account_balance</span></div>
+      <h1>Architectural Ledger</h1>
+    </div>
+    <p class="subtitle">Sign in to continue.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label class="field">
+        <span class="field-label">Email</span>
+        <div class="input-wrap">
+          <span class="material-symbols-outlined input-icon">mail</span>
+          <input type="email" formControlName="email" placeholder="you@example.com" />
+        </div>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Password</span>
+        <div class="input-wrap">
+          <span class="material-symbols-outlined input-icon">lock</span>
+          <input type="password" formControlName="password" placeholder="Your password" />
+        </div>
+      </label>
+
+      <p class="error" *ngIf="error()">
+        <span class="material-symbols-outlined">error</span> {{ error() }}
+      </p>
+
+      <button type="submit" [disabled]="loading()">
+        {{ loading() ? 'Signing in...' : 'Sign in' }}
+      </button>
+    </form>
+
+    <p class="switch-copy">Don't have an account? <a routerLink="/signup">Create one</a></p>
+  </div>
+</section>

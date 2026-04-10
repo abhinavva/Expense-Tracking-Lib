@@ -29,7 +29,7 @@ function bindDynamicParams(mysqli_stmt $stmt, string $types, array $params): voi
 $mode = strtolower(trim((string)($_GET["mode"] ?? "")));
 
 if ($mode !== "table") {
-    $result = $conn->query("SELECT id, full_name, email, role, is_active, created_at FROM users ORDER BY created_at DESC");
+    $result = $conn->query("SELECT id, full_name, email, profile_image, role, is_active, created_at FROM users ORDER BY created_at DESC");
     $users = [];
     if ($result) {
         while ($row = $result->fetch_assoc()) {
@@ -120,7 +120,7 @@ $totalPages = max(1, (int)ceil($totalItems / $limit));
 $page = min($page, $totalPages);
 $offset = ($page - 1) * $limit;
 
-$usersSql = "SELECT id, full_name, email, role, is_active, created_at FROM users" . $whereSql . " ORDER BY created_at DESC LIMIT ? OFFSET ?";
+$usersSql = "SELECT id, full_name, email, profile_image, role, is_active, created_at FROM users" . $whereSql . " ORDER BY created_at DESC LIMIT ? OFFSET ?";
 $usersStmt = $conn->prepare($usersSql);
 if (!$usersStmt) {
     jsonError("Failed to prepare users list query", 500);

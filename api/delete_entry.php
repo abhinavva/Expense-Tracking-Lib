@@ -8,9 +8,9 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
 
 requireAdministrator();
 
-$voucher_number = trim($_POST["voucher_number"] ?? "");
-if ($voucher_number === "") {
-    jsonError("Voucher number required", 422);
+$entry_id = (int)($_POST["id"] ?? 0);
+if ($entry_id <= 0) {
+    jsonError("Entry id required", 422);
 }
 
 try {
@@ -19,8 +19,8 @@ try {
     jsonError("Could not connect to database", 500);
 }
 
-$stmt = $conn->prepare("DELETE FROM entry_table WHERE voucher_number=?");
-$stmt->bind_param("s", $voucher_number);
+$stmt = $conn->prepare("DELETE FROM entry_table WHERE id=?");
+$stmt->bind_param("i", $entry_id);
 
 if ($stmt->execute()) {
     jsonResponse(["status" => "success", "message" => "Entry deleted successfully"]);

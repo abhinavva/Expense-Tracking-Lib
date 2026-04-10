@@ -1,0 +1,45 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <div class="brand">
+      <div class="brand-icon"><span class="material-symbols-outlined">person_add</span></div>
+      <h1>Create Account</h1>
+    </div>
+    <p class="subtitle">Set up your Architectural Ledger workspace.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label class="field">
+        <span class="field-label">Full name</span>
+        <div class="input-wrap">
+          <span class="material-symbols-outlined input-icon">badge</span>
+          <input type="text" formControlName="fullName" placeholder="Your name" />
+        </div>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Email</span>
+        <div class="input-wrap">
+          <span class="material-symbols-outlined input-icon">mail</span>
+          <input type="email" formControlName="email" placeholder="you@example.com" />
+        </div>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Password</span>
+        <div class="input-wrap">
+          <span class="material-symbols-outlined input-icon">lock</span>
+          <input type="password" formControlName="password" placeholder="Minimum 8 characters" />
+        </div>
+      </label>
+
+      <p class="error" *ngIf="error()">
+        <span class="material-symbols-outlined">error</span> {{ error() }}
+      </p>
+
+      <button type="submit" [disabled]="loading()">
+        {{ loading() ? 'Creating...' : 'Create account' }}
+      </button>
+    </form>
+
+    <p class="switch-copy">Already have an account? <a routerLink="/login">Sign in</a></p>
+  </div>
+</section>

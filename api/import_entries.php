@@ -98,13 +98,16 @@ foreach ($entries as $index => $rawEntry) {
     $description = trim((string)($rawEntry["description"] ?? ""));
     $amount = normalizeAmountValue($rawEntry["amount"] ?? "");
 
-    if ($type === null || $date === null || $voucherNumber === "" || $accountHead === "" || $description === "" || $amount === null) {
+    if ($type === null || $date === null || $accountHead === "" || $amount === null) {
         $invalid += 1;
         if (count($errorRows) < 20) {
             $errorRows[] = ["row" => $rowNo, "message" => "Missing or invalid required columns."];
         }
         continue;
     }
+
+    $voucherNumber = $voucherNumber === "" ? null : $voucherNumber;
+    $description = $description === "" ? null : $description;
 
     $stmt->bind_param("ssssss", $type, $date, $voucherNumber, $accountHead, $description, $amount);
     if ($stmt->execute()) {

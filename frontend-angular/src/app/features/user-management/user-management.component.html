@@ -1,0 +1,365 @@
+<section class="users-page">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div>
+      <h2>User Management</h2>
+      <p>Oversee system access and manage administrative permissions.</p>
+    </div>
+    <button class="primary-btn" type="button" (click)="openCreate()">
+      <span class="material-symbols-outlined">person_add</span>
+      Create New User
+    </button>
+  </header>
+
+  <!-- Stats Overview Bento Grid -->
+  <section class="stats-grid">
+    <article class="stat-card">
+      <div class="stat-top">
+        <div class="stat-icon primary-bg">
+          <span class="material-symbols-outlined">group</span>
+        </div>
+        <span class="stat-badge" *ngIf="totalUsers() > 0">+12%</span>
+      </div>
+      <div class="stat-bottom">
+        <p class="stat-label">Total Users</p>
+        <h3>{{ totalUsers() }}</h3>
+      </div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-top">
+        <div class="stat-icon secondary-bg">
+          <span class="material-symbols-outlined">bolt</span>
+        </div>
+        <span class="stat-badge secondary">Active Now</span>
+      </div>
+      <div class="stat-bottom">
+        <p class="stat-label">Active Users</p>
+        <h3>{{ activeUsers() }}</h3>
+      </div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-top">
+        <div class="stat-icon tertiary-bg">
+          <span class="material-symbols-outlined">badge</span>
+        </div>
+      </div>
+      <div class="stat-bottom">
+        <p class="stat-label">Staff Members</p>
+        <h3>{{ staffUsers() }}</h3>
+      </div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-top">
+        <div class="stat-icon error-bg">
+          <span class="material-symbols-outlined">admin_panel_settings</span>
+        </div>
+      </div>
+      <div class="stat-bottom">
+        <p class="stat-label">Admins</p>
+        <h3>{{ adminUsers() }}</h3>
+      </div>
+    </article>
+  </section>
+
+  <!-- User Table Section -->
+  <section class="users-card">
+    <!-- Filters & Search Toolbar -->
+    <div class="toolbar">
+      <div class="search-input-wrap">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input
+          type="text"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event); applyFilters()"
+          placeholder="Search by name or email..."
+        />
+      </div>
+      <div class="filter-group">
+        <div class="filter-select">
+          <span class="material-symbols-outlined filter-icon">filter_list</span>
+          <select [ngModel]="role()" (ngModelChange)="role.set($event); applyFilters()">
+            <option value="all">All Roles</option>
+            <option value="administrator">Admin</option>
+            <option value="staff">Staff</option>
+          </select>
+        </div>
+        <div class="filter-select">
+          <span class="material-symbols-outlined filter-icon">radio_button_checked</span>
+          <select [ngModel]="status()" (ngModelChange)="status.set($event); applyFilters()">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <p class="error" *ngIf="error()">{{ error() }}</p>
+
+    <!-- Table -->
+    <div class="table-wrap" *ngIf="!loading(); else loadingTpl">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th class="th-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users()" class="user-row">
+            <td>
+              <div class="name-cell">
+                <img *ngIf="avatarUrl(user)" [src]="avatarUrl(user)" class="avatar avatar-img" alt="" />
+                <span *ngIf="!avatarUrl(user)" class="avatar">{{ initials(user.full_name) }}</span>
+                <strong>{{ user.full_name }}</strong>
+              </div>
+            </td>
+            <td class="td-email">{{ user.email }}</td>
+            <td>
+              <span class="role-tag" [class.admin]="user.role === 'administrator'" [class.staff]="user.role !== 'administrator'">
+                {{ roleTag(user.role) }}
+              </span>
+            </td>
+            <td>
+              <div class="status-cell">
+                <span class="status-dot" [class.inactive]="!isUserActive(user)"></span>
+                <span [class.text-muted]="!isUserActive(user)">{{ isUserActive(user) ? 'Active' : 'Inactive' }}</span>
+              </div>
+            </td>
+            <td class="td-right">
+              <div class="action-row">
+                <button class="action-btn" type="button" (click)="openEdit(user)">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+                <button class="action-btn" type="button">
+                  <span class="material-symbols-outlined">more_vert</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="users().length === 0">
+            <td colspan="5" class="empty">No users found for current filters.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #loadingTpl>
+      <div class="loading">Loading users...</div>
+    </ng-template>
+
+    <!-- Table Footer / Pagination -->
+    <div class="table-footer">
+      <p class="footer-info">
+        Showing <strong>{{ currentPage() }}-{{ totalPages() }}</strong> of {{ totalItems() }} users
+      </p>
+      <div class="pager">
+        <button type="button" class="pager-btn" (click)="prevPage()" [disabled]="currentPage() <= 1">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <button type="button" class="pager-num active">{{ currentPage() }}</button>
+        <button type="button" class="pager-num" *ngIf="totalPages() > 1">{{ totalPages() }}</button>
+        <button type="button" class="pager-btn" (click)="nextPage()" [disabled]="currentPage() >= totalPages()">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security Banner -->
+  <section class="security-banner">
+    <div class="banner-content">
+      <h3>Security Protocol Enforcement</h3>
+      <p>
+        Administrators are reminded to review active permissions quarterly. Ensuring the principle
+        of least privilege maintains integrity of the financial data structure.
+      </p>
+      <div class="chips">
+        <span>27% Enforcement Active</span>
+        <span>Audit Logs Updated</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Create User Dialog -->
+  <div class="dialog-backdrop" *ngIf="showCreateDialog()">
+    <div class="dialog-card dialog-wide">
+      <!-- Modal Header -->
+      <div class="dialog-head">
+        <div>
+          <h4>Create New User</h4>
+          <p class="dialog-subtitle">Set up a new user account for the organization.</p>
+        </div>
+        <button type="button" class="close-btn" (click)="closeCreate()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Modal Content -->
+      <div class="dialog-body">
+        <form [formGroup]="createForm" (ngSubmit)="createUser()">
+          <!-- Profile Image Section -->
+          <section class="profile-section">
+            <div class="profile-avatar-wrap">
+              <div class="profile-avatar large" *ngIf="!createAvatarPreview()">
+                <span class="material-symbols-outlined">person</span>
+              </div>
+              <img *ngIf="createAvatarPreview()" [src]="createAvatarPreview()" class="profile-avatar large img" alt="Preview" />
+              <button class="avatar-camera-btn" type="button" (click)="createAvatarInput.click()">
+                <span class="material-symbols-outlined">photo_camera</span>
+              </button>
+              <input #createAvatarInput type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="onCreateAvatarSelected($event)" />
+            </div>
+            <div class="profile-meta">
+              <h3 class="section-label">Profile Image</h3>
+              <p class="section-hint">Recommended size 256×256px. PNG, JPG or WebP.</p>
+              <div class="profile-actions">
+                <button type="button" class="text-btn primary" (click)="createAvatarInput.click()">Upload Photo</button>
+                <button type="button" class="text-btn danger" *ngIf="createAvatarPreview()" (click)="clearCreateAvatar()">Remove</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Information Grid -->
+          <section class="form-grid">
+            <label class="field-label">
+              Full Name
+              <input type="text" formControlName="full_name" placeholder="Enter full name" />
+            </label>
+            <label class="field-label">
+              Email Address
+              <input type="email" formControlName="email" placeholder="user@example.com" />
+            </label>
+            <label class="field-label">
+              Password
+              <input type="password" formControlName="password" placeholder="Minimum 8 characters" />
+            </label>
+            <label class="field-label">
+              Role Assignment
+              <div class="select-wrap">
+                <select formControlName="role">
+                  <option value="staff">Staff</option>
+                  <option value="administrator">System Administrator</option>
+                </select>
+                <span class="material-symbols-outlined select-arrow">expand_more</span>
+              </div>
+            </label>
+          </section>
+
+          <p class="dialog-error" *ngIf="error()"><span class="material-symbols-outlined">error</span> {{ error() }}</p>
+        </form>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="dialog-footer">
+        <button type="button" class="btn-discard" (click)="closeCreate()">Discard</button>
+        <button type="button" class="btn-save" (click)="createUser()">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit User Dialog -->
+  <div class="dialog-backdrop" *ngIf="showEditDialog()">
+    <div class="dialog-card dialog-wide">
+      <!-- Modal Header -->
+      <div class="dialog-head">
+        <div>
+          <h4>Edit User: {{ editingUser()?.full_name }}</h4>
+          <p class="dialog-subtitle">
+            {{ roleTag(editingUser()?.role || '') }} • ID: USR-{{ editingUser()?.id }}
+          </p>
+        </div>
+        <button type="button" class="close-btn" (click)="closeEdit()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Modal Content -->
+      <div class="dialog-body">
+        <form [formGroup]="editForm" (ngSubmit)="updateUser()">
+          <!-- Profile Image Section -->
+          <section class="profile-section">
+            <div class="profile-avatar-wrap">
+              <div class="profile-avatar large" *ngIf="!editAvatarPreview()">
+                <span class="avatar-initials">{{ initials(editingUser()?.full_name || '') }}</span>
+              </div>
+              <img *ngIf="editAvatarPreview()" [src]="editAvatarPreview()" class="profile-avatar large img" alt="Profile" />
+              <button class="avatar-camera-btn" type="button" (click)="editAvatarInput.click()">
+                <span class="material-symbols-outlined">photo_camera</span>
+              </button>
+              <input #editAvatarInput type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="onEditAvatarSelected($event)" />
+            </div>
+            <div class="profile-meta">
+              <h3 class="section-label">Profile Image</h3>
+              <p class="section-hint">Recommended size 256×256px. PNG, JPG or WebP.</p>
+              <div class="profile-actions">
+                <button type="button" class="text-btn primary" (click)="editAvatarInput.click()">Update Photo</button>
+                <button type="button" class="text-btn danger" *ngIf="editAvatarPreview()" (click)="removeEditAvatar()">Remove</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Information Grid -->
+          <section class="form-grid">
+            <label class="field-label">
+              Full Name
+              <input type="text" formControlName="full_name" />
+            </label>
+            <label class="field-label">
+              Email Address
+              <input type="email" formControlName="email" />
+            </label>
+            <label class="field-label">
+              Role Assignment
+              <div class="select-wrap">
+                <select formControlName="role">
+                  <option value="staff">Staff</option>
+                  <option value="administrator">System Administrator</option>
+                </select>
+                <span class="material-symbols-outlined select-arrow">expand_more</span>
+              </div>
+            </label>
+            <label class="field-label">
+              Account Status
+              <div class="status-toggle">
+                <button type="button" class="toggle-opt" [class.active]="editForm.get('is_active')?.value === '1'" (click)="editForm.patchValue({ is_active: '1' })">Active</button>
+                <button type="button" class="toggle-opt" [class.active]="editForm.get('is_active')?.value === '0'" (click)="editForm.patchValue({ is_active: '0' })">Inactive</button>
+              </div>
+            </label>
+          </section>
+
+          <!-- Security Settings -->
+          <section class="security-section">
+            <div class="security-heading">
+              <span class="material-symbols-outlined">verified_user</span>
+              <h3>Security Settings</h3>
+            </div>
+            <div class="security-row">
+              <div>
+                <h4>Reset Password</h4>
+                <p>Set a new password for this user account.</p>
+              </div>
+            </div>
+            <label class="field-label">
+              New Password (leave blank to keep current)
+              <input type="password" formControlName="password" placeholder="Minimum 8 characters" />
+            </label>
+          </section>
+
+          <p class="dialog-error" *ngIf="error()"><span class="material-symbols-outlined">error</span> {{ error() }}</p>
+        </form>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="dialog-footer">
+        <button type="button" class="btn-discard" (click)="closeEdit()">Discard</button>
+        <button type="button" class="btn-save" (click)="updateUser()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+

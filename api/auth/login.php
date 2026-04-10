@@ -24,7 +24,7 @@ try {
 }
 
 $stmt = $conn->prepare(
-    "SELECT id, full_name, email, password_hash, role, is_active FROM users WHERE email = ? LIMIT 1"
+    "SELECT id, full_name, email, profile_image, password_hash, role, is_active FROM users WHERE email = ? LIMIT 1"
 );
 $stmt->bind_param("s", $email);
 $stmt->execute();
@@ -45,6 +45,7 @@ $_SESSION["user"] = [
     "id" => (int)$user["id"],
     "full_name" => $user["full_name"],
     "email" => $user["email"],
+    "profile_image" => $user["profile_image"],
     "role" => normalizeRole($user["role"])
 ];
 

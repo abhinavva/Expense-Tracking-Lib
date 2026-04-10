@@ -1,0 +1,243 @@
+<section class="dashboard-page">
+  <!-- Page Header -->
+  <header class="page-header">
+    <h2>Financial Overview</h2>
+    <p>Welcome back, your portfolio is up 4.2% this month.</p>
+  </header>
+
+  <!-- Summary Cards (Bento Grid) -->
+  <section class="summary-grid">
+    <article class="summary-card balance">
+      <div class="card-top">
+        <span class="card-label">Total Balance</span>
+        <div class="card-icon-wrap balance-icon">
+          <span class="material-symbols-outlined">account_balance_wallet</span>
+        </div>
+      </div>
+      <div class="card-bottom">
+        <h3>{{ formatCurrency(summary().net_balance) }}</h3>
+        <p class="card-meta accent">{{ summary().total_entries }} total entries</p>
+      </div>
+    </article>
+    <article class="summary-card income">
+      <div class="card-top">
+        <span class="card-label">Total Income</span>
+        <div class="card-icon-wrap income-icon">
+          <span class="material-symbols-outlined">trending_up</span>
+        </div>
+      </div>
+      <div class="card-bottom">
+        <h3>{{ formatCurrency(summary().total_income) }}</h3>
+        <p class="card-meta">Tracked from all income rows</p>
+      </div>
+    </article>
+    <article class="summary-card expense">
+      <div class="card-top">
+        <span class="card-label">Total Expenses</span>
+        <div class="card-icon-wrap expense-icon">
+          <span class="material-symbols-outlined">trending_down</span>
+        </div>
+      </div>
+      <div class="card-bottom">
+        <h3>{{ formatCurrency(summary().total_expenditure) }}</h3>
+        <p class="card-meta">Includes all expenditure rows</p>
+      </div>
+    </article>
+  </section>
+
+  <!-- Dashboard Grid: Quick Add + Transactions -->
+  <div class="dashboard-grid" [class.dashboard-grid-readonly]="!isAdmin()">
+    <!-- Quick Add Entry Panel (Asymmetric Left) -->
+    <section class="quick-add-panel" *ngIf="isAdmin()">
+      <div class="panel-title-row">
+        <span class="material-symbols-outlined text-primary">add_circle</span>
+        <h3>Quick Add Entry</h3>
+      </div>
+
+      <form [formGroup]="quickForm" (ngSubmit)="submitQuickEntry()" class="quick-form">
+        <div class="form-group">
+          <label class="field-label">Type</label>
+          <div class="type-row">
+            <button
+              type="button"
+              [class.active]="quickForm.value.type === 'Income'"
+              (click)="setQuickType('Income')"
+            >
+              Income
+            </button>
+            <button
+              type="button"
+              [class.active]="quickForm.value.type === 'Expenditure'"
+              (click)="setQuickType('Expenditure')"
+            >
+              Expense
+            </button>
+          </div>
+        </div>
+
+        <label class="field-label">
+          Date
+          <input type="date" formControlName="date" />
+        </label>
+
+        <label class="field-label">
+          Voucher Number (Optional)
+          <input type="text" formControlName="voucher_number" placeholder="REC-001 / VOU-001" />
+        </label>
+
+        <label class="field-label">
+          Category (Account Head)
+          <select formControlName="account_head">
+            <option *ngFor="let head of accountHeads" [value]="head">{{ head }}</option>
+          </select>
+        </label>
+
+        <label class="field-label">
+          Amount
+          <div class="amount-input-wrap">
+            <span class="currency-symbol">$</span>
+            <input type="number" step="0.01" formControlName="amount" placeholder="0.00" />
+          </div>
+        </label>
+
+        <label class="field-label">
+          Description (Optional)
+          <textarea rows="3" formControlName="description" placeholder="Brief note..."></textarea>
+        </label>
+
+        <button class="submit-btn" type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Saving...' : 'Finalize Entry' }}
+        </button>
+      </form>
+    </section>
+
+    <!-- Recent Transactions (Asymmetric Right) -->
+    <section class="transactions-panel">
+      <div class="transactions-header">
+        <h3>Recent Transactions</h3>
+        <button type="button" class="export-btn" (click)="exportCsv()" [disabled]="exporting()">
+          {{ exporting() ? 'Exporting...' : 'Export CSV' }}
+        </button>
+      </div>
+
+      <p class="panel-error" *ngIf="error()">{{ error() }}</p>
+
+      <div class="table-wrap" *ngIf="!loading(); else loadingTpl">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Voucher</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Amount</th>
+              <th class="th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of entries()" class="entry-row">
+              <td class="td-date">{{ entry.date }}</td>
+              <td>
+                <span class="type-pill" [class.income]="entry.type === 'Income'">{{ entry.type }}</span>
+              </td>
+              <td class="td-voucher">{{ displayVoucher(entry.voucher_number) }}</td>
+              <td class="td-category">{{ entry.account_head }}</td>
+              <td class="td-desc">{{ entry.description || '-' }}</td>
+              <td class="td-amount">{{ formatCurrency(entry.amount) }}</td>
+              <td class="td-actions">
+                <ng-container *ngIf="isAdmin(); else noActionsTpl">
+                  <div class="action-row">
+                    <button type="button" class="action-btn edit" (click)="openEdit(entry)">
+                      <span class="material-symbols-outlined">edit</span>
+                    </button>
+                    <button type="button" class="action-btn delete" (click)="deleteEntry(entry)">
+                      <span class="material-symbols-outlined">delete</span>
+                    </button>
+                  </div>
+                </ng-container>
+                <ng-template #noActionsTpl><span class="no-action">-</span></ng-template>
+              </td>
+            </tr>
+            <tr *ngIf="entries().length === 0">
+              <td colspan="7" class="empty">No transactions found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #loadingTpl>
+        <div class="loading">Loading entries...</div>
+      </ng-template>
+
+      <div class="table-footer">
+        <div class="footer-info">
+          <span>Showing {{ entries().length }} of {{ totalItems() }} transactions</span>
+          <div class="per-page">
+            <span>Show</span>
+            <select [value]="perPage()" (change)="changePerPage(+$any($event.target).value)">
+              <option [value]="5">5</option>
+              <option [value]="15">15</option>
+              <option [value]="25">25</option>
+              <option [value]="50">50</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pager">
+          <button type="button" (click)="prevPage()" [disabled]="currentPage() <= 1">Previous</button>
+          <button type="button" (click)="nextPage()" [disabled]="currentPage() >= totalPages()">Next</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Edit Dialog -->
+  <div class="dialog-backdrop" *ngIf="showEditDialog()">
+    <div class="dialog-card">
+      <div class="dialog-head">
+        <h4>Edit Entry</h4>
+        <button type="button" class="close-btn" (click)="closeEdit()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <form [formGroup]="editForm" (ngSubmit)="saveEdit()" class="dialog-form">
+        <label class="field-label">
+          Type
+          <select formControlName="type">
+            <option value="Income">Income</option>
+            <option value="Expenditure">Expenditure</option>
+          </select>
+        </label>
+        <label class="field-label">
+          Date
+          <input type="date" formControlName="date" />
+        </label>
+        <label class="field-label">
+          Voucher Number (Optional)
+          <input type="text" formControlName="voucher_number" />
+        </label>
+        <label class="field-label">
+          Account Head
+          <input type="text" formControlName="account_head" />
+        </label>
+        <label class="field-label">
+          Description (Optional)
+          <input type="text" formControlName="description" />
+        </label>
+        <label class="field-label">
+          Amount
+          <input type="number" step="0.01" formControlName="amount" />
+        </label>
+
+        <div class="dialog-actions">
+          <button type="button" class="btn-secondary" (click)="closeEdit()">Cancel</button>
+          <button type="submit" class="btn-primary" [disabled]="submitting()">
+            {{ submitting() ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>

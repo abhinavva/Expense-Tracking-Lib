@@ -10,14 +10,17 @@ requireAdministrator();
 
 $type = trim($_POST["type"] ?? "");
 $date = trim($_POST["date"] ?? "");
-$voucher_number = trim($_POST["voucher_number"] ?? "");
+$voucher_number_input = trim($_POST["voucher_number"] ?? "");
 $account_head = trim($_POST["account_head"] ?? "");
 $description = trim($_POST["description"] ?? "");
 $amount = trim($_POST["amount"] ?? "");
 
-if ($type === "" || $date === "" || $voucher_number === "" || $account_head === "" || $description === "" || $amount === "") {
-    jsonError("All fields are required", 422);
+if ($type === "" || $date === "" || $account_head === "" || $amount === "") {
+    jsonError("Type, date, account head, and amount are required", 422);
 }
+
+$voucher_number = $voucher_number_input === "" ? null : $voucher_number_input;
+$description = $description === "" ? null : $description;
 
 try {
     $conn = getDbConnection();

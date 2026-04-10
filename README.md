@@ -1,58 +1,143 @@
-# Library Income & Expenditure Tracker
+# Architectural Ledger — Income & Expenditure Tracker
 
-This project is organized for a clean AppServ/XAMPP-style PHP setup.
+A full-stack expenditure tracking system with a PHP REST API backend and an Angular 18 frontend, designed for AppServ/XAMPP deployment.
 
-## Structure
+## Architecture
 
-- `index.html` - Main app page (requires login)
-- `login.html` - Login page
-- `signup.html` - Initial setup signup page (first account only)
-- `assets/css/styles.css` - UI styles
-- `assets/js/app.js` - Frontend behavior
-- `assets/js/auth.js` - Login/signup behavior
-- `api/` - PHP API endpoints used by the frontend
-  - `auth/login.php`
-  - `auth/signup.php`
-  - `auth/logout.php`
-  - `auth/me.php`
-  - `auth/list_users.php`
-  - `auth/update_user.php`
-  - `insert.php`
-  - `fetch_entries.php`
-  - `edit_entry.php`
-  - `delete_entry.php`
-  - `export_entries.php`
-- `config/database.php` - Shared MySQL connection config
-- `config/auth.php` - Session/auth helpers
-- `database/schema.sql` - SQL schema for database and tables
+```
+Expense-Tracking/
+├── api/                    # PHP REST API (backend)
+│   ├── auth/               # Authentication endpoints
+│   │   ├── login.php
+│   │   ├── signup.php
+│   │   ├── logout.php
+│   │   ├── me.php
+│   │   ├── list_users.php
+│   │   └── update_user.php
+│   ├── insert.php          # Add entry
+│   ├── fetch_entries.php   # List/paginate entries
+│   ├── edit_entry.php      # Update entry
+│   ├── delete_entry.php    # Remove entry
+│   ├── export_entries.php  # CSV export
+│   ├── finance_insights.php# Monthly analytics
+│   ├── backup_settings.php # Backup path config
+│   ├── create_backup.php   # Server-side backup
+│   ├── download_backup.php # ZIP download
+│   ├── export_tally.php    # Tally XML export
+│   └── import_entries.php  # Bulk CSV/XLSX import
+├── config/
+│   ├── database.php        # MySQL connection
+│   ├── auth.php            # Session/auth helpers
+│   └── backup_settings.json
+├── database/
+│   ├── schema.sql          # Base schema
+│   └── migrations/         # Schema migrations
+├── frontend-angular/       # Angular 18 SPA (source)
+├── app/                    # Angular production build (served by Apache)
+└── mobile/                 # Flutter SMS expense tracker companion
+```
 
-## Run on AppServ
+## Quick Start (AppServ)
 
-1. Place this folder inside your AppServ web root (for example `www/`).
-2. Import `database/schema.sql` in MySQL.
-3. Update DB credentials in `config/database.php` if needed.
-4. Open `http://localhost/<your-folder>/signup.html` once for initial setup.
-5. Create your first user account (it becomes `administrator` automatically).
-6. Login at `http://localhost/<your-folder>/login.html`.
-7. Use the app at `http://localhost/<your-folder>/index.html`.
-8. Create/edit additional users from the admin-only "User Management" section.
+### Prerequisites
 
-## Authentication Notes
+- AppServ or XAMPP with Apache + PHP + MySQL running
+- Node.js v20+ (for building the Angular frontend)
 
-- Auth is session-based using PHP sessions.
-- Unauthenticated access to finance APIs returns `401`.
-- Role policy:
-  - `administrator`: full access (users, entries, view, export)
-  - `staff`: can only view and export entries
-- User creation and user editing are administrator-only actions.
-- Passwords are stored as hashes (`PASSWORD_DEFAULT`), never plain text.
+### 1. Database Setup
 
-## Quick API Test Checklist
+```sql
+-- Import in phpMyAdmin or MySQL CLI:
+source C:/AppServ/www/Expense-Tracking/database/schema.sql
+source C:/AppServ/www/Expense-Tracking/database/migrations/20260410_nullable_voucher_description.sql
+```
 
-1. First-time signup creates `administrator` successfully.
-2. Login with correct credentials -> success.
-3. Open `index.html` without login -> redirected to `login.html`.
-4. Staff user can view/export but cannot add/edit/delete entries.
-5. Staff user cannot create/edit users.
-6. Administrator can create/edit users from User Management.
-7. Logout invalidates session and redirects to login.
+### 2. Configure Database Connection
+
+Edit `config/database.php` if your MySQL credentials differ from the defaults.
+
+### 3. Build & Deploy the Angular Frontend
+
+```powershell
+cd C:\AppServ\www\Expense-Tracking\frontend-angular
+
+# Install dependencies (first time only)
+npm install
+
+# Build for production
+npm run build
+
+# Deploy to AppServ
+Copy-Item .\dist\architectural-ledger-angular\browser\* ..\app\ -Recurse -Force
+```
+
+### 4. Apache Configuration
+
+Ensure these are set in `C:\AppServ\Apache24\conf\httpd.conf`:
+
+```apache
+# Uncomment this line:
+LoadModule rewrite_module modules/mod_rewrite.so
+
+# In the <Directory "C:/AppServ/www"> block, set:
+AllowOverride All
+```
+
+Restart Apache after changes.
+
+### 5. Open the App
+
+- **Angular app:** [http://localhost/Expense-Tracking/app/](http://localhost/Expense-Tracking/app/)
+- **First-time setup:** Navigate to the signup page and create your first account (becomes `administrator` automatically).
+
+## Rebuild After Code Changes
+
+```powershell
+cd C:\AppServ\www\Expense-Tracking\frontend-angular
+npm run build
+Copy-Item .\dist\architectural-ledger-angular\browser\* ..\app\ -Recurse -Force
+```
+
+No Apache restart needed — just refresh the browser.
+
+## Development Server
+
+For live-reload development without rebuilding:
+
+```powershell
+cd C:\AppServ\www\Expense-Tracking\frontend-angular
+npm start
+```
+
+Opens at [http://localhost:4200](http://localhost:4200). API calls are proxied to `http://localhost` (AppServ) via `proxy.conf.json`.
+
+## Angular Frontend
+
+See [frontend-angular/README.md](frontend-angular/README.md) for source details.
+
+### Screens
+
+| Route | Access | Description |
+|-------|--------|-------------|
+| `/login` | Public | Email/password authentication |
+| `/signup` | Public | First-time account creation |
+| `/dashboard` | Authenticated | Entry CRUD, summary cards, quick-add form |
+| `/finance-insights` | Authenticated | Monthly analytics, charts, category breakdown |
+| `/user-management` | Admin only | User list, create/edit users, role management |
+| `/backup` | Admin only | Server backup, ZIP download, Tally export, CSV/XLSX import |
+
+### Design System
+
+"Architectural Ledger" — uses Manrope + Inter typography, tonal surface layering, ambient shadows, glassmorphism modals, Material Symbols icons, and a no-line layout approach. Primary color: `#545f73`.
+
+## Authentication
+
+- Session-based using PHP sessions with `withCredentials` cookies.
+- **Administrator:** Full access — entries, users, backup, export.
+- **Staff:** View and export entries only.
+- First signup automatically gets the `administrator` role.
+- Passwords stored as bcrypt hashes (`PASSWORD_DEFAULT`).
+
+## Mobile Companion
+
+The `mobile/flutter_sms_expense_tracker/` directory contains a Flutter app that reads SMS messages to auto-capture expenses. See its own README for setup.

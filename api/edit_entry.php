@@ -8,17 +8,20 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
 
 requireAdministrator();
 
-$original_voucher_number = trim($_POST["original_voucher_number"] ?? "");
+$entry_id = (int)($_POST["id"] ?? 0);
 $type = trim($_POST["type"] ?? "");
 $date = trim($_POST["date"] ?? "");
-$voucher_number = trim($_POST["voucher_number"] ?? "");
+$voucher_number_input = trim($_POST["voucher_number"] ?? "");
 $account_head = trim($_POST["account_head"] ?? "");
 $description = trim($_POST["description"] ?? "");
 $amount = trim($_POST["amount"] ?? "");
 
-if ($original_voucher_number === "" || $type === "" || $date === "" || $voucher_number === "" || $account_head === "" || $description === "" || $amount === "") {
-    jsonError("All fields are required", 422);
+if ($entry_id <= 0 || $type === "" || $date === "" || $account_head === "" || $amount === "") {
+    jsonError("Type, date, account head, and amount are required", 422);
 }
+
+$voucher_number = $voucher_number_input === "" ? null : $voucher_number_input;
+$description = $description === "" ? null : $description;
 
 try {
     $conn = getDbConnection();
@@ -26,8 +29,8 @@ try {
     jsonError("Could not connect to database", 500);
 }
 
-$stmt = $conn->prepare("UPDATE entry_table SET type=?, date=?, voucher_number=?, account_head=?, description=?, amount=? WHERE voucher_number=?");
-$stmt->bind_param("sssssss", $type, $date, $voucher_number, $account_head, $description, $amount, $original_voucher_number);
+$stmt = $conn->prepare("UPDATE entry_table SET type=?, date=?, voucher_number=?, account_head=?, description=?, amount=? WHERE id=?");
+$stmt->bind_param("ssssssi", $type, $date, $voucher_number, $account_head, $description, $amount, $entry_id);
 
 if ($stmt->execute()) {
     jsonResponse(["status" => "success", "message" => "Entry updated successfully"]);

@@ -1,0 +1,209 @@
+<section class="insights-page">
+  <!-- Header Section -->
+  <header class="page-header">
+    <div>
+      <h2>Finance Insights</h2>
+      <p>Strategic expenditure analysis and capital distribution.</p>
+    </div>
+    <div class="toggle-group">
+      <button [class.active]="activeView() === 'monthly'" (click)="switchView('monthly')">Monthly Breakdown</button>
+      <button [class.active]="activeView() === 'yearly'" (click)="switchView('yearly')">Yearly Overview</button>
+    </div>
+  </header>
+
+  <!-- Filters -->
+  <section class="filters">
+    <label class="field-label">
+      Month
+      <input type="month" [ngModel]="selectedMonth()" (ngModelChange)="onMonthChange($event)" />
+    </label>
+    <label class="field-label">
+      Financial Year
+      <select [ngModel]="selectedFyStart()" (ngModelChange)="onFyChange(+$event)">
+        <option *ngFor="let fyStart of fyOptions()" [value]="fyStart">
+          FY {{ fyStart }}-{{ (fyStart + 1).toString().slice(2) }}
+        </option>
+      </select>
+    </label>
+  </section>
+
+  <p class="error" *ngIf="error()">{{ error() }}</p>
+
+  <!-- Bento Grid Layout -->
+  <div class="bento-grid" *ngIf="!loading(); else loadingTpl">
+    <!-- Main Trend Chart (8-col span) -->
+    <section class="trend-card">
+      <div class="card-head">
+        <div>
+          <h3>Capital Flow Trends</h3>
+          <p>Comparative analysis of income vs expenditures</p>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><i class="dot primary"></i>Expenses</span>
+          <span class="legend-item"><i class="dot secondary"></i>Income</span>
+        </div>
+      </div>
+
+      <div class="bars-container" *ngIf="barSeries().length > 0; else noBars">
+        <div class="bars">
+          <div *ngFor="let bar of barSeries()" class="bar-col">
+            <div class="tooltip-hover">{{ formatCurrency(bar.value) }}</div>
+            <div
+              class="bar"
+              [class.bar-primary]="bar.tone === 'primary'"
+              [class.bar-secondary]="bar.tone === 'secondary'"
+              [style.height.%]="bar.heightPct"
+            ></div>
+            <p class="bar-label">{{ bar.label | slice:0:3 }}</p>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noBars>
+        <div class="empty-state">No trend data available for selected period.</div>
+      </ng-template>
+    </section>
+
+    <!-- Income Category Distribution (4-col span) -->
+    <section class="allocation-card">
+      <h3>Income Allocation</h3>
+      <p class="subtitle">Primary revenue streams</p>
+
+      <div class="ring-container">
+        <div class="ring" [style.--ring-angle]="ringAngle()">
+          <div class="ring-center">
+            <strong>{{ formatCurrency(totalIncome()) }}</strong>
+            <span>Total Income</span>
+          </div>
+        </div>
+      </div>
+
+      <ul class="allocation-list" *ngIf="incomeRows().length > 0; else noIncomeRows">
+        <li *ngFor="let row of incomeRows().slice(0, 3); let i = index">
+          <div class="alloc-label">
+            <i class="alloc-dot" [class.dot-primary]="i === 0" [class.dot-secondary]="i === 1" [class.dot-neutral]="i > 1"></i>
+            <span>{{ row.label }}</span>
+          </div>
+          <strong>{{ allocationPercent(row.value) }}</strong>
+        </li>
+      </ul>
+      <ng-template #noIncomeRows>
+        <p class="empty-state">No income data.</p>
+      </ng-template>
+    </section>
+  </div>
+
+  <!-- Key Metrics Section -->
+  <section class="metrics-section" *ngIf="!loading()">
+    <h3 class="section-title">
+      <span class="material-symbols-outlined text-primary">analytics</span>
+      Key Metrics
+    </h3>
+    <div class="metrics-grid">
+      <article class="metric-card">
+        <div class="metric-top">
+          <div class="metric-icon">
+            <span class="material-symbols-outlined text-primary">savings</span>
+          </div>
+          <span class="metric-badge positive" *ngIf="savingsRate() !== null && savingsRate()! > 0">
+            <span class="material-symbols-outlined badge-icon">trending_up</span>
+            {{ formatPercent(savingsRate()) }}
+          </span>
+        </div>
+        <p class="metric-label">Savings Rate</p>
+        <h4 class="metric-value">{{ formatPercent(savingsRate()) }}</h4>
+        <div class="metric-bar">
+          <span [style.width.%]="savingsRate() ?? 0"></span>
+        </div>
+      </article>
+
+      <article class="metric-card">
+        <div class="metric-top">
+          <div class="metric-icon secondary">
+            <span class="material-symbols-outlined">balance</span>
+          </div>
+          <span class="metric-badge negative" *ngIf="expenseIncomeRatio() !== null">
+            <span class="material-symbols-outlined badge-icon">trending_down</span>
+            {{ formatPercent(expenseIncomeRatio()) }}
+          </span>
+        </div>
+        <p class="metric-label">Exp/Income Ratio</p>
+        <h4 class="metric-value">{{ formatPercent(expenseIncomeRatio()) }}</h4>
+        <div class="metric-bar secondary-bar">
+          <span [style.width.%]="expenseIncomeRatio() ?? 0"></span>
+        </div>
+      </article>
+
+      <article class="metric-card">
+        <div class="metric-top">
+          <div class="metric-icon tertiary">
+            <span class="material-symbols-outlined">category</span>
+          </div>
+          <span class="metric-badge-text">Stable</span>
+        </div>
+        <p class="metric-label">Avg Exp / Category</p>
+        <h4 class="metric-value">{{ formatCurrency(avgExpensePerHead()) }}</h4>
+        <p class="metric-footnote">Projected for next month</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Category Precision Analysis Table -->
+  <section class="category-card" *ngIf="!loading()">
+    <div class="category-head">
+      <h3>Category Precision Analysis</h3>
+      <button type="button" class="link-btn">
+        Export Detailed Report
+        <span class="material-symbols-outlined">open_in_new</span>
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th class="th-center">Volume</th>
+            <th>Efficiency</th>
+            <th class="th-right">Allocation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of categoryRows()" class="cat-row">
+            <td>
+              <div class="cat-cell">
+                <div class="cat-icon">
+                  <span class="material-symbols-outlined">category</span>
+                </div>
+                <div>
+                  <span class="cat-name">{{ row.category }}</span>
+                  <span class="cat-sub">Budget category</span>
+                </div>
+              </div>
+            </td>
+            <td class="td-center">{{ row.volume }}</td>
+            <td>
+              <div class="efficiency-wrap">
+                <div class="efficiency-bar">
+                  <span [style.width.%]="row.efficiency"></span>
+                </div>
+                <small class="efficiency-pct">{{ row.efficiency }}%</small>
+              </div>
+            </td>
+            <td class="td-right">
+              <strong>{{ formatCurrency(row.allocation) }}</strong>
+            </td>
+          </tr>
+          <tr *ngIf="categoryRows().length === 0">
+            <td colspan="4" class="empty-state">No category data for this period.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <ng-template #loadingTpl>
+    <div class="loading-state">Loading insights...</div>
+  </ng-template>
+</section>
+
