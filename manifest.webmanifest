@@ -1,0 +1,26 @@
+﻿{
+  "id": "./",
+  "name": "Library Expenditure Tracker",
+  "short_name": "Exp Tracker",
+  "description": "Track library income and expenditure with finance insights, backups, and Tally export.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#091224",
+  "theme_color": "#0d1e3a",
+  "icons": [
+    {
+      "src": "assets/icons/wallet-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/wallet-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
