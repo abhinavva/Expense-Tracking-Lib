@@ -105,6 +105,32 @@ $fyExpense = getTotalsMap(
     [$fyFrom, $fyTo]
 );
 
+// Month-wise totals for the selected FY
+$fyMonthly = [];
+$stmtMonthly = $conn->prepare("
+    SELECT DATE_FORMAT(date, '%Y-%m') AS month,
+           SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) AS income,
+           SUM(CASE WHEN type = 'Expenditure' THEN amount ELSE 0 END) AS expense
+    FROM entry_table
+    WHERE date BETWEEN ? AND ?
+    GROUP BY DATE_FORMAT(date, '%Y-%m')
+    ORDER BY month ASC
+");
+if ($stmtMonthly) {
+    $stmtMonthly->bind_param("ss", $fyFrom, $fyTo);
+    $stmtMonthly->execute();
+    $resMonthly = $stmtMonthly->get_result();
+    if ($resMonthly) {
+        while ($row = $resMonthly->fetch_assoc()) {
+            $fyMonthly[] = [
+                "month"   => (string)$row["month"],
+                "income"  => (float)($row["income"] ?? 0),
+                "expense" => (float)($row["expense"] ?? 0)
+            ];
+        }
+    }
+}
+
 jsonResponse([
     "status" => "success",
     "selected_month" => $selectedMonth,
@@ -113,6 +139,7 @@ jsonResponse([
     "monthly_income" => $monthlyIncome,
     "monthly_expense" => $monthlyExpense,
     "fy_income" => $fyIncome,
-    "fy_expense" => $fyExpense
+    "fy_expense" => $fyExpense,
+    "fy_monthly" => $fyMonthly
 ]);
 ?>

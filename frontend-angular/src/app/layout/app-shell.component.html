@@ -46,7 +46,7 @@
           <span class="material-symbols-outlined">notifications</span>
           <span class="notification-dot"></span>
         </button>
-        <button class="icon-btn" type="button" aria-label="Settings">
+        <button class="icon-btn" type="button" aria-label="Settings" (click)="showSettings.set(true)">
           <span class="material-symbols-outlined">settings</span>
         </button>
 
@@ -79,6 +79,9 @@
     </main>
   </div>
 </div>
+
+<!-- Settings Dialog -->
+<app-settings-dialog *ngIf="showSettings()" (closed)="showSettings.set(false)"></app-settings-dialog>
 
 <!-- Mobile Bottom Navigation -->
 <nav class="mobile-nav">

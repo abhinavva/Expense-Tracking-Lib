@@ -1,0 +1,235 @@
+<div class="settings-backdrop" (click)="onBackdropClick($event)">
+  <div class="settings-modal">
+    <!-- Header -->
+    <header class="modal-header">
+      <div>
+        <h1>Application Settings</h1>
+        <p>Precision Atelier · Institutional Grade</p>
+      </div>
+      <button class="close-btn" type="button" (click)="close()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </header>
+
+    <!-- Scrollable Content -->
+    <div class="modal-body" *ngIf="!loading(); else loadingTpl">
+      <!-- Messages -->
+      <p class="msg error" *ngIf="error()">{{ error() }}</p>
+      <p class="msg success" *ngIf="success()">{{ success() }}</p>
+
+      <!-- Currency Section -->
+      <section class="settings-section two-col">
+        <div class="section-info">
+          <h3>Currency</h3>
+          <p>Select the global reference currency for all analytical ledger outputs.</p>
+        </div>
+        <div class="section-control">
+          <label class="micro-label">Set Primary Currency</label>
+          <div class="select-wrap">
+            <select [ngModel]="currency()" (ngModelChange)="onCurrencyChange($event)">
+              <option *ngFor="let c of currencyOptions" [value]="c">{{ currencyLabels[c] }}</option>
+            </select>
+            <span class="material-symbols-outlined select-arrow">unfold_more</span>
+          </div>
+
+          <label class="micro-label mt-label">Conversion Mode</label>
+          <div class="mode-toggle">
+            <button
+              type="button"
+              class="mode-btn"
+              [class.active]="currencyMode() === 'symbol_only'"
+              (click)="currencyMode.set('symbol_only')"
+            >
+              <span class="material-symbols-outlined">currency_exchange</span>
+              <div>
+                <strong>Symbol Only</strong>
+                <span>Change display symbol only. Values stay the same.</span>
+              </div>
+            </button>
+            <button
+              type="button"
+              class="mode-btn"
+              [class.active]="currencyMode() === 'convert'"
+              (click)="currencyMode.set('convert')"
+            >
+              <span class="material-symbols-outlined">swap_horiz</span>
+              <div>
+                <strong>Live Conversion</strong>
+                <span>Convert amounts using real-time exchange rates.</span>
+              </div>
+            </button>
+          </div>
+
+          <div class="rate-info" *ngIf="currencyMode() === 'convert' && currency() !== 'USD' && previewRate()">
+            <span class="material-symbols-outlined">info</span>
+            <span>1 USD = {{ previewRate() | number:'1.2-4' }} {{ currency() }}</span>
+          </div>
+          <div class="rate-info loading" *ngIf="rateLoading()">
+            <span>Fetching live exchange rate...</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- Account Headers Section -->
+      <section class="settings-section">
+        <div class="section-title-row">
+          <div>
+            <h3>Account Headers</h3>
+            <p>Manage the classification labels for budgetary tracking and financial reporting.</p>
+          </div>
+          <span class="material-symbols-outlined section-icon">account_tree</span>
+        </div>
+
+        <!-- Headers List -->
+        <div class="list-card">
+          <div class="list-header">
+            <div class="list-col-name">Header Name</div>
+            <div class="list-col-action">Actions</div>
+          </div>
+          <div class="list-body">
+            <div class="list-row" *ngFor="let head of accountHeads(); let i = index">
+              <span class="row-label">{{ head }}</span>
+              <button class="icon-btn-sm danger" type="button" (click)="removeHeader(i)">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </div>
+            <div class="list-empty" *ngIf="accountHeads().length === 0">
+              No account headers configured.
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Header -->
+        <div class="add-area">
+          <h4>Add New Header</h4>
+          <div class="add-row">
+            <div class="add-field">
+              <label class="micro-label">Header Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Travel Expenses"
+                [ngModel]="newHeader()"
+                (ngModelChange)="newHeader.set($event)"
+                (keydown.enter)="addHeader()"
+              />
+            </div>
+            <button class="btn-primary" type="button" (click)="addHeader()">
+              <span class="material-symbols-outlined">add</span>
+              Add Header
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- Form Manager Section -->
+      <section class="settings-section">
+        <div class="section-title-row">
+          <div>
+            <h3>Form Manager</h3>
+            <p>Define the structural data points for ledger entry ingestion.</p>
+          </div>
+          <span class="material-symbols-outlined section-icon">dynamic_form</span>
+        </div>
+
+        <!-- Fields List -->
+        <div class="list-card">
+          <div class="list-header three-col">
+            <div class="list-col-name">Field Label</div>
+            <div class="list-col-type">Type</div>
+            <div class="list-col-action">Actions</div>
+          </div>
+          <div class="list-body">
+            <div class="list-row three-col" *ngFor="let field of formFields(); let i = index">
+              <div class="field-label-cell">
+                <span class="material-symbols-outlined drag-icon">drag_indicator</span>
+                <span class="row-label" [class.muted]="!field.visible">{{ field.label }}</span>
+                <span class="system-badge" *ngIf="field.system">required</span>
+              </div>
+              <div class="field-type-cell">
+                <span class="type-badge">{{ field.type }}</span>
+              </div>
+              <div class="field-actions-cell">
+                <button
+                  class="icon-btn-sm"
+                  [class.active]="field.visible"
+                  type="button"
+                  (click)="toggleFieldVisibility(i)"
+                  [attr.aria-label]="field.visible ? 'Hide field' : 'Show field'"
+                >
+                  <span class="material-symbols-outlined" [style.font-variation-settings]="field.visible ? '\'FILL\' 1' : '\'FILL\' 0'">
+                    {{ field.visible ? 'visibility' : 'visibility_off' }}
+                  </span>
+                </button>
+                <button
+                  class="icon-btn-sm danger"
+                  type="button"
+                  (click)="removeField(i)"
+                  *ngIf="!field.system"
+                >
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Field -->
+        <div class="add-area">
+          <h4>Add New Field</h4>
+          <div class="add-row two-inputs">
+            <div class="add-field">
+              <label class="micro-label">Field Label / Placeholder</label>
+              <input
+                type="text"
+                placeholder="e.g. Transaction ID"
+                [ngModel]="newFieldLabel()"
+                (ngModelChange)="newFieldLabel.set($event)"
+                (keydown.enter)="addField()"
+              />
+            </div>
+            <div class="add-field">
+              <label class="micro-label">Controller Type</label>
+              <div class="select-wrap">
+                <select [ngModel]="newFieldType()" (ngModelChange)="newFieldType.set($event)">
+                  <option *ngFor="let t of fieldTypeOptions" [value]="t">{{ t | titlecase }}</option>
+                </select>
+                <span class="material-symbols-outlined select-arrow">expand_more</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn-primary" type="button" (click)="addField()">
+            <span class="material-symbols-outlined">add</span>
+            Add Field to Form
+          </button>
+        </div>
+      </section>
+
+      <!-- Help Footer -->
+      <footer class="help-footer">
+        <span class="material-symbols-outlined">menu_book</span>
+        <div>
+          <p class="help-title">Need assistance?</p>
+          <p class="help-desc">Consult the Documentation for advanced schema management.</p>
+        </div>
+      </footer>
+    </div>
+
+    <ng-template #loadingTpl>
+      <div class="modal-body">
+        <p class="loading-msg">Loading settings...</p>
+      </div>
+    </ng-template>
+
+    <!-- Footer Actions -->
+    <div class="modal-footer">
+      <button class="btn-text" type="button" (click)="close()">Cancel</button>
+      <button class="btn-save" type="button" (click)="saveSettings()" [disabled]="saving()">
+        {{ saving() ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+  </div>
+</div>

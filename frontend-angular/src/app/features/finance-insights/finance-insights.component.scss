@@ -182,9 +182,9 @@ select:focus {
 
 .bars {
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 0.25rem;
-  min-height: 16rem;
+  height: 16rem;
 }
 
 .bar-col {
@@ -192,6 +192,7 @@ select:focus {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
   position: relative;
 }
@@ -240,6 +241,10 @@ select:focus {
   color: var(--outline);
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ─── Allocation Card ─── */
@@ -582,6 +587,69 @@ th {
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--primary);
+}
+
+/* ─── Responsive ─── */
+
+/* ─── Yearly Charts ─── */
+.yearly-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.chart-card {
+  background: var(--surface-container-lowest);
+  border-radius: 0.75rem;
+  box-shadow: var(--ambient-shadow);
+  padding: 2rem;
+}
+
+/* Month-wise paired bars */
+.month-bars-container {
+  position: relative;
+}
+
+.month-bars {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  height: 16rem;
+}
+
+.month-bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.month-bar-pair {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 0.2rem;
+  width: 100%;
+}
+
+.month-bar-pair .bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.month-bar-group .bar-label {
+  flex-shrink: 0;
+}
+
+@media (max-width: 1060px) {
+  .yearly-charts {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ─── Responsive ─── */

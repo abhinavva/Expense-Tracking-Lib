@@ -3,16 +3,18 @@ import { Component, computed, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AuthService } from '../core/services/auth.service';
+import { SettingsDialogComponent } from '../features/settings/settings-dialog.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SettingsDialogComponent],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss'
 })
 export class AppShellComponent {
   readonly user = computed(() => this.authService.currentUser());
+  readonly showSettings = signal(false);
   readonly userMenuOpen = signal(false);
 
   readonly navItems = [

@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Entry, EntrySummary, EntryType } from '../../core/models/entry.model';
 import { AuthService } from '../../core/services/auth.service';
 import { EntriesService } from '../../core/services/entries.service';
+import { SettingsService } from '../../core/services/settings.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -36,24 +37,12 @@ export class DashboardComponent implements OnInit {
   readonly editEntry = signal<Entry | null>(null);
   readonly showEditDialog = signal(false);
 
-  readonly accountHeads = [
-    'Monthly Subscription',
-    'Entrance Fees',
-    'Security Deposit',
-    'Life Membership',
-    'Grant for Books',
-    'Library Grant',
-    'Librarian Allowance',
-    'Festival Allowance',
-    'Bank Interest',
-    'Advance',
-    'Newspaper/Periodicals',
-    'Electricity Charge',
-    'Meeting Fees',
-    'Miscellaneous Exp',
-    'Miscellaneous income',
-    'Refreshment Exp.'
-  ];
+  readonly accountHeads = computed(() => this.settingsService.accountHeads());
+  readonly currency = computed(() => this.settingsService.currency());
+  readonly currencySymbol = computed(() => {
+    const symbols: Record<string, string> = { USD: '$', EUR: '€', INR: '₹', GBP: '£', JPY: '¥' };
+    return symbols[this.currency()] || this.currency();
+  });
 
   readonly quickForm = this.fb.nonNullable.group({
     type: ['Income' as EntryType, Validators.required],
@@ -76,11 +65,15 @@ export class DashboardComponent implements OnInit {
   constructor(
     private readonly fb: FormBuilder,
     private readonly entriesService: EntriesService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly settingsService: SettingsService
   ) {}
 
   ngOnInit(): void {
-    this.loadEntries();
+    this.settingsService.load().subscribe({
+      next: () => this.loadEntries(),
+      error: () => this.loadEntries()
+    });
   }
 
   setQuickType(type: EntryType): void {
@@ -313,13 +306,7 @@ export class DashboardComponent implements OnInit {
   }
 
   formatCurrency(value: number | string): string {
-    const amount = Number(value || 0);
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
+    return this.settingsService.formatCurrency(value);
   }
 
   displayVoucher(value: string | null): string {

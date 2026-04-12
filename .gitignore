@@ -1,0 +1,6 @@
+# Build output
+/app/
+
+# Uploaded files
+/uploads/avatars/*
+!/uploads/avatars/.gitkeep

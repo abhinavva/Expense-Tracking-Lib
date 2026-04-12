@@ -3,6 +3,12 @@ import { Observable } from 'rxjs';
 
 import { ApiService } from './api.service';
 
+export interface FyMonthlyRow {
+  month: string;
+  income: number;
+  expense: number;
+}
+
 export interface FinanceInsightsResponse {
   status: 'success' | 'error';
   selected_month: string;
@@ -12,6 +18,7 @@ export interface FinanceInsightsResponse {
   monthly_expense: Record<string, number>;
   fy_income: Record<string, number>;
   fy_expense: Record<string, number>;
+  fy_monthly?: FyMonthlyRow[];
   message?: string;
 }
 

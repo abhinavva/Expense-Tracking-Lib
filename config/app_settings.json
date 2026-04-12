@@ -1,0 +1,66 @@
+{
+    "currency": "INR",
+    "account_heads": [
+        "Monthly Subscription",
+        "Entrance Fees",
+        "Security Deposit",
+        "Life Membership",
+        "Grant for Books",
+        "Library Grant",
+        "Librarian Allowance",
+        "Festival Allowance",
+        "Bank Interest",
+        "Advance",
+        "Newspaper\/Periodicals",
+        "Electricity Charge",
+        "Meeting Fees",
+        "Miscellaneous Exp",
+        "Miscellaneous income",
+        "Refreshment Exp."
+    ],
+    "form_fields": [
+        {
+            "key": "type",
+            "label": "Type",
+            "type": "dropdown",
+            "visible": true,
+            "system": true
+        },
+        {
+            "key": "date",
+            "label": "Date",
+            "type": "date",
+            "visible": true,
+            "system": true
+        },
+        {
+            "key": "voucher_number",
+            "label": "Voucher Number",
+            "type": "textbox",
+            "visible": false,
+            "system": false
+        },
+        {
+            "key": "account_head",
+            "label": "Account Head",
+            "type": "dropdown",
+            "visible": true,
+            "system": true
+        },
+        {
+            "key": "amount",
+            "label": "Amount",
+            "type": "textbox",
+            "visible": true,
+            "system": true
+        },
+        {
+            "key": "description",
+            "label": "Description",
+            "type": "textbox",
+            "visible": true,
+            "system": false
+        }
+    ],
+    "currency_mode": "symbol_only"
+}

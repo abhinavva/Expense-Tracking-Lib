@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { FinanceInsightsResponse, FinanceService } from '../../core/services/finance.service';
+import { FinanceInsightsResponse, FyMonthlyRow, FinanceService } from '../../core/services/finance.service';
+import { SettingsService } from '../../core/services/settings.service';
 
 interface BreakdownRow {
   label: string;
@@ -107,7 +108,47 @@ export class FinanceInsightsComponent {
     }));
   });
 
-  constructor(private readonly financeService: FinanceService) {
+  /** Month-wise bar chart for yearly view */
+  readonly fyMonthlySeries = computed(() => {
+    const rows = this.payload()?.fy_monthly ?? [];
+    const maxVal = rows.reduce((m, r) => Math.max(m, r.income, r.expense), 0) || 1;
+    return rows.map((r) => ({
+      month: r.month,
+      monthLabel: this.formatMonthLabel(r.month),
+      income: r.income,
+      expense: r.expense,
+      incomePct: Math.max(4, Math.round((r.income / maxVal) * 100)),
+      expensePct: Math.max(4, Math.round((r.expense / maxVal) * 100))
+    }));
+  });
+
+  /** Item-wise (account head) bar chart for yearly view */
+  readonly fyItemSeries = computed(() => {
+    const incomeMap = this.payload()?.fy_income ?? {};
+    const expenseMap = this.payload()?.fy_expense ?? {};
+
+    const items: { label: string; type: 'income' | 'expense'; value: number }[] = [];
+    for (const [label, value] of Object.entries(incomeMap)) {
+      items.push({ label, type: 'income', value: Number(value || 0) });
+    }
+    for (const [label, value] of Object.entries(expenseMap)) {
+      items.push({ label, type: 'expense', value: Number(value || 0) });
+    }
+
+    items.sort((a, b) => b.value - a.value);
+    const top = items.slice(0, 12);
+    const maxVal = top.reduce((m, r) => Math.max(m, r.value), 0) || 1;
+
+    return top.map((r) => ({
+      ...r,
+      heightPct: Math.max(8, Math.round((r.value / maxVal) * 100))
+    }));
+  });
+
+  constructor(
+    private readonly financeService: FinanceService,
+    private readonly settingsService: SettingsService
+  ) {
     this.loadInsights();
   }
 
@@ -151,11 +192,7 @@ export class FinanceInsightsComponent {
   }
 
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2
-    }).format(value || 0);
+    return this.settingsService.formatCurrency(value);
   }
 
   formatPercent(value: number | null): string {
@@ -176,6 +213,12 @@ export class FinanceInsightsComponent {
 
   private defaultMonth(): string {
     return new Date().toISOString().slice(0, 7);
+  }
+
+  formatMonthLabel(yyyyMm: string): string {
+    const [y, m] = yyyyMm.split('-');
+    const date = new Date(+y, +m - 1);
+    return date.toLocaleString('default', { month: 'short' });
   }
 
   private mapToRows(map: Record<string, number>): BreakdownRow[] {

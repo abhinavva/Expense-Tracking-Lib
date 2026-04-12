@@ -54,7 +54,7 @@
               [class.bar-secondary]="bar.tone === 'secondary'"
               [style.height.%]="bar.heightPct"
             ></div>
-            <p class="bar-label">{{ bar.label | slice:0:3 }}</p>
+            <p class="bar-label">{{ bar.label }}</p>
           </div>
         </div>
       </div>
@@ -89,6 +89,79 @@
       </ul>
       <ng-template #noIncomeRows>
         <p class="empty-state">No income data.</p>
+      </ng-template>
+    </section>
+  </div>
+
+  <!-- Yearly Charts: Month-wise & Item-wise -->
+  <div class="yearly-charts" *ngIf="!loading() && activeView() === 'yearly'">
+
+    <!-- Month-wise Income vs Expense -->
+    <section class="chart-card">
+      <div class="card-head">
+        <div>
+          <h3>Month-wise Breakdown</h3>
+          <p>Income vs expense for each month in the financial year</p>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><i class="dot secondary"></i>Income</span>
+          <span class="legend-item"><i class="dot primary"></i>Expense</span>
+        </div>
+      </div>
+
+      <div class="month-bars-container" *ngIf="fyMonthlySeries().length > 0; else noMonthly">
+        <div class="month-bars">
+          <div *ngFor="let m of fyMonthlySeries()" class="month-bar-group">
+            <div class="month-bar-pair">
+              <div class="bar-col">
+                <div class="tooltip-hover">{{ formatCurrency(m.income) }}</div>
+                <div class="bar bar-secondary" [style.height.%]="m.incomePct"></div>
+              </div>
+              <div class="bar-col">
+                <div class="tooltip-hover">{{ formatCurrency(m.expense) }}</div>
+                <div class="bar bar-primary" [style.height.%]="m.expensePct"></div>
+              </div>
+            </div>
+            <p class="bar-label">{{ m.monthLabel }}</p>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noMonthly>
+        <div class="empty-state">No monthly data for this financial year.</div>
+      </ng-template>
+    </section>
+
+    <!-- Item-wise (Account Head) Chart -->
+    <section class="chart-card">
+      <div class="card-head">
+        <div>
+          <h3>Item-wise Breakdown</h3>
+          <p>Top account heads by total amount in the financial year</p>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><i class="dot secondary"></i>Income</span>
+          <span class="legend-item"><i class="dot primary"></i>Expense</span>
+        </div>
+      </div>
+
+      <div class="bars-container" *ngIf="fyItemSeries().length > 0; else noItems">
+        <div class="bars">
+          <div *ngFor="let item of fyItemSeries()" class="bar-col">
+            <div class="tooltip-hover">{{ formatCurrency(item.value) }}</div>
+            <div
+              class="bar"
+              [class.bar-primary]="item.type === 'expense'"
+              [class.bar-secondary]="item.type === 'income'"
+              [style.height.%]="item.heightPct"
+            ></div>
+            <p class="bar-label">{{ item.label }}</p>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noItems>
+        <div class="empty-state">No item data for this financial year.</div>
       </ng-template>
     </section>
   </div>
